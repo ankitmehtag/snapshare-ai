@@ -1,0 +1,9 @@
+{
+  "identities": [
+    {
+      "name": "snapshare-dev",
+      "credentials": [{ "accessKey": "snapshare-dev", "secretKey": "snapshare-dev-secret-key" }],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

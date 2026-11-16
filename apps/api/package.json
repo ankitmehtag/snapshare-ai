@@ -1,0 +1,46 @@
+{
+  "name": "@snapshare/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=../../.env src/main.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/main.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
+    "migrate": "node --env-file-if-exists=../../.env ./node_modules/migrate-mongo/bin/migrate-mongo.js up -f migrate-mongo-config.cjs",
+    "migrate:status": "node --env-file-if-exists=../../.env ./node_modules/migrate-mongo/bin/migrate-mongo.js status -f migrate-mongo-config.cjs"
+  },
+  "dependencies": {
+    "@asteasolutions/zod-to-openapi": "9.1.0",
+    "@snapshare/config": "workspace:*",
+    "@snapshare/server-kit": "workspace:*",
+    "@snapshare/types": "workspace:*",
+    "@snapshare/validators": "workspace:*",
+    "@socket.io/redis-adapter": "8.3.0",
+    "cookie-parser": "1.4.7",
+    "cors": "2.8.6",
+    "express": "5.3.0",
+    "helmet": "8.3.0",
+    "ioredis": "6.0.0",
+    "migrate-mongo": "14.0.7",
+    "mongoose": "9.12.2",
+    "pino-http": "11.0.0",
+    "rate-limiter-flexible": "11.5.0",
+    "socket.io": "4.8.4",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "1.4.10",
+    "@types/cors": "2.8.19",
+    "@types/express": "5.0.6",
+    "@types/supertest": "7.2.1",
+    "mongodb": "7.8.0",
+    "pino": "10.4.0",
+    "socket.io-client": "4.8.4",
+    "supertest": "7.3.2",
+    "tsx": "4.23.15"
+  }
+}

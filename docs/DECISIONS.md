@@ -27,6 +27,8 @@ Any ADR that changes a locked decision in MASTER_SPEC §2 needs explicit owner a
 | 020 | Free security self-assessment at launch; paid pentest after revenue | **Accepted** (owner, 2026-11-17) |
 | 021 | Node 24 LTS and TypeScript 6.0 | **Accepted** (owner, 2026-11-17) |
 | 022 | Local ESLint architecture rules instead of eslint-plugin-boundaries | **Accepted** (owner, 2026-11-17) |
+| 023 | Local dev storage = SeaweedFS (MinIO images discontinued); Redis = Valkey | **Accepted** (owner, 2026-11-17) |
+| 024 | `packages/server-kit` for server-only shared code | **Accepted** (owner, 2026-11-17) |
 
 ---
 
@@ -287,3 +289,23 @@ Fixture tests in `tooling/architecture-rules.test.ts` prove both rules.
 **Consequences.**
 - ✅ One fewer dependency, and the rule behaviour is fully known and tested.
 - ⚠️ We maintain these ~60 lines ourselves.
+
+## ADR-023 — SeaweedFS for local S3 and Valkey for Redis
+**Context.**
+- **MinIO:** the plan named MinIO for local S3-compatible storage, but MinIO stopped publishing free Docker images; `minio/minio` returns 404 on Docker Hub as of Nov 2026.
+- **Redis:** Redis 8 is distributed under AGPL/SSPL-style terms.
+
+**Decision.**
+- **Local storage:** SeaweedFS 4.50 (Apache-2.0), with buckets created automatically by `storage-init`. Production storage is unchanged: Backblaze B2 (ADR-019). The app only speaks the S3 API, so the backend is swappable.
+- **Redis:** Valkey 8.1 (BSD-3, the Linux Foundation Redis fork), run with `maxmemory-policy noeviction` as BullMQ requires. The same choice applies in production at no cost.
+
+**Consequences.** Both are free and permissively licensed, and the app code is unaffected.
+
+## ADR-024 — `packages/server-kit`
+**Context.** The api and the workers both need the outbox model and writer, queue factories with DLQ handling, the logger with redaction, and the Mongo/Redis connection helpers. MASTER_SPEC §17 lists only `ui`, `types`, `config` and `validators` packages.
+
+**Decision.** Add `packages/server-kit`, holding server-only code that is never imported by the web app.
+
+**Consequences.**
+- ✅ One tested implementation of the outbox and DLQ logic instead of two copies.
+- This is a small extension of the spec's §17 structure, recorded here.

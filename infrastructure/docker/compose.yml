@@ -1,0 +1,112 @@
+# Local data services for SnapShare AI (Phase 1 Batch 1B).
+# Usage (from repo root):  pnpm infra:up   |   pnpm infra:down
+# Apps (api, workers, web) run on the host with `pnpm dev` for fast reloads.
+name: snapshare
+
+services:
+  mongo:
+    image: mongo:8.0
+    command: ['--replSet', 'rs0', '--bind_ip_all', '--wiredTigerCacheSizeGB', '0.5']
+    ports: ['127.0.0.1:27017:27017']
+    volumes: ['mongo-data:/data/db']
+    healthcheck:
+      # Initiates the single-node replica set on first boot (transactions need a replica set).
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --eval
+        - "try { rs.status().ok } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'localhost:27017' }] }).ok }"
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 10s
+    mem_limit: 1g
+    restart: unless-stopped
+
+  redis:
+    # Valkey: BSD-licensed Redis fork, fully supported by BullMQ (ADR-023).
+    image: valkey/valkey:8.1-alpine
+    command: ['valkey-server', '--appendonly', 'yes', '--maxmemory-policy', 'noeviction']
+    ports: ['127.0.0.1:6379:6379']
+    volumes: ['redis-data:/data']
+    healthcheck:
+      test: ['CMD', 'valkey-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 256m
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:v1.19.2
+    ports: ['127.0.0.1:6333:6333']
+    environment:
+      QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY:-snapshare-dev-qdrant-key}
+    volumes: ['qdrant-data:/qdrant/storage']
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'bash -c "exec 3<>/dev/tcp/127.0.0.1/6333 && echo -e \"GET /readyz HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n\" >&3 && grep -q \"200 OK\" <&3"',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    mem_limit: 1g
+    restart: unless-stopped
+
+  storage:
+    # S3-compatible object storage for local dev (stands in for Backblaze B2). ADR-023.
+    image: chrislusf/seaweedfs:4.50
+    command:
+      [
+        'server',
+        '-dir=/data',
+        '-s3',
+        '-s3.port=8333',
+        '-s3.config=/etc/seaweedfs/s3.json',
+        '-volume.max=5',
+        '-master.volumeSizeLimitMB=256',
+      ]
+    ports: ['127.0.0.1:8333:8333']
+    volumes:
+      - storage-data:/data
+      - ./seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'wget -q -O /dev/null http://127.0.0.1:9333/cluster/status && wget -q -S -O /dev/null http://127.0.0.1:8333/ 2>&1 | grep -q "HTTP/"',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    mem_limit: 512m
+    restart: unless-stopped
+
+  storage-init:
+    image: chrislusf/seaweedfs:4.50
+    depends_on:
+      storage: { condition: service_healthy }
+    entrypoint: ['/bin/sh', '-c']
+    command:
+      - |
+        for b in snapshare-media snapshare-tmp; do
+          echo "s3.bucket.create -name $$b" | weed shell -master=storage:9333 || true
+        done
+    restart: 'no'
+
+  mailpit:
+    # Catches all outgoing email locally: UI at http://localhost:8025
+    image: axllent/mailpit:v1.27
+    ports: ['127.0.0.1:8025:8025', '127.0.0.1:1025:1025']
+    mem_limit: 128m
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
+  redis-data:
+  qdrant-data:
+  storage-data:

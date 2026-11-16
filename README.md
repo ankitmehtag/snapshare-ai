@@ -10,11 +10,16 @@ Prerequisites: Node 24 (`fnm use`), pnpm 10, Docker, uv, gitleaks.
 
 ```bash
 pnpm install        # also installs git hooks (secret scan + format check)
-pnpm build
-pnpm lint && pnpm typecheck && pnpm test
+cp .env.example .env
+pnpm infra:up       # MongoDB (replica set), Valkey, Qdrant, SeaweedFS (S3), Mailpit
+pnpm build && pnpm migrate
+pnpm dev            # api on :4000, workers (all roles) with health on :4100
+
+pnpm lint && pnpm typecheck && pnpm test   # fast checks
+pnpm test:integration                      # needs pnpm infra:up
 ```
 
-Local services (`docker compose`) arrive in Phase 1 Batch 1B.
+Local tools: Mailpit UI at http://localhost:8025, API probes at http://localhost:4000/health and /ready, OpenAPI at http://localhost:4000/openapi.json (dev only).
 
 ## How this project is developed (spec-driven, owner-gated)
 
