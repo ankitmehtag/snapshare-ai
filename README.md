@@ -18,8 +18,8 @@ Self-hosted, AI-powered photography SaaS for professional photographers, studios
 | Batch | Contents | Status |
 |---|---|---|
 | 1 — Product | PRD, User Journeys, Screen Inventory | ✅ Approved |
-| 2 — Architecture & Data | Architecture, Database Schema, API Spec, OpenAPI, Decisions | 🟡 In progress |
-| 3 — AI, Security, Infra | AI Architecture, Security & Threat Model, Infrastructure, Deployment, Testing | ⚪ Not started |
+| 2 — Architecture & Data | Architecture, Database Schema, API Spec, OpenAPI, Decisions | ✅ Approved |
+| 3 — AI, Security, Infra | AI Architecture, Security & Threat Model, Infrastructure, Deployment, Testing | 🟡 In progress |
 | 4 — Roadmap & Risks | Implementation Plan, Risk Register, Architectural Gaps | ⚪ Not started |
 
 ## Document index
@@ -30,10 +30,10 @@ Self-hosted, AI-powered photography SaaS for professional photographers, studios
 | [PRD.md](docs/PRD.md) | Product requirements, personas, scope, metrics | 1 |
 | [USER_JOURNEYS.md](docs/USER_JOURNEYS.md) | End-to-end user flows | 1 |
 | [SCREEN_INVENTORY.md](docs/SCREEN_INVENTORY.md) | All screens, routes, roles, states | 1 |
-| ARCHITECTURE.md | System design + diagrams | 2 |
-| DATABASE_SCHEMA.md | Collections, indexes, relationships | 2 |
-| API_SPEC.md + openapi/ | REST contract | 2 |
-| DECISIONS.md | Architecture Decision Records | 2 |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design + diagrams | 2 |
+| [DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md) | Collections, indexes, relationships | 2 |
+| [API_SPEC.md](docs/API_SPEC.md) + [openapi/](docs/openapi/openapi.yaml) | REST contract | 2 |
+| [DECISIONS.md](docs/DECISIONS.md) | Architecture Decision Records | 2 |
 | AI_ARCHITECTURE.md | Self-hosted AI platform | 3 |
 | SECURITY.md | Threat model, controls, DPDP compliance | 3 |
 | INFRASTRUCTURE.md / DEPLOYMENT.md | Environments, scaling, ops | 3 |
