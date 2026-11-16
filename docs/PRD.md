@@ -153,13 +153,13 @@ One user account can be personal, belong to several studios, or both. An account
 | Plan | Audience | Price/mo (annual) | Storage | Events/mo | AI face indexing | Team | Branding |
 |---|---|---|---|---|---|---|---|
 | Free | Personal | ₹0 | 5 GB | n/a | 1,000 photos/mo | — | SnapShare branding |
-| Personal Pro | Personal/family | ₹199 (₹1,990/yr) | 200 GB | n/a | 20k photos/mo | Family group of up to 10 | — |
+| Personal Pro | Personal/family | ₹199 (₹1,990/yr) | 100 GB | n/a | 20k photos/mo | Family group of up to 10 | — |
 | Photographer Starter | Solo | ₹999 (₹9,990/yr) | 500 GB | 10 active | 50k photos/mo | 2 | Logo, no SnapShare badge |
-| Photographer Pro | Solo/small | ₹2,499 (₹24,990/yr) | 2 TB | Unlimited active | 200k photos/mo | 5 | Full branding, watermarks, proofing |
-| Studio Business | Studios | ₹6,999 (₹69,990/yr) | 5 TB | Unlimited | 600k photos/mo | 20 | Custom domain, CRM, portfolio |
+| Photographer Pro | Solo/small | ₹2,499 (₹24,990/yr) | 1.5 TB | Unlimited active | 200k photos/mo | 5 | Full branding, watermarks, proofing |
+| Studio Business | Studios | ₹6,999 (₹69,990/yr) | 4 TB | Unlimited | 600k photos/mo | 20 | Custom domain, CRM, portfolio |
 | Enterprise | Large studios/organizers | Custom | Custom | Custom | Custom | Custom | White-label, SLA |
 
-> ⚠️ **Prices are placeholders.** They must be validated against GPU and storage cost per photo (Batch 4 risk register) and competitor pricing. All limits live in `plans.entitlements` and are never hardcoded.
+> **Quotas updated per G1 (provisionally approved 2026-11-17)** so every plan keeps about 60% or more gross margin even at full storage use (RISK_REGISTER §3). Prices exclude 18% GST. Storage add-on: ₹399 per 500 GB/month. Archived events (> 12 months) count at half quota. Final prices are confirmed before the Phase 6 launch. All limits live in `plans.entitlements` and are never hardcoded.
 
 ## 7. Key Requirements
 
