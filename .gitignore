@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Builds
+dist/
+build/
+coverage/
+.turbo/
+.vite/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.insforge/
+
+# AI model weights (never commit; fetched per license)
+models/
+*.onnx
+*.pt
+*.pth
+
+# Local data volumes
+.data/
+minio-data/
+mongo-data/
+qdrant-data/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.log
