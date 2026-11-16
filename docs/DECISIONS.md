@@ -25,6 +25,8 @@ Any ADR that changes a locked decision in MASTER_SPEC §2 needs explicit owner a
 | 018 | Cheaper hosting outside India (Hetzner) | **Accepted** (owner, 2026-11-17) |
 | 019 | Backblaze B2 behind Cloudflare as primary object storage | Accepted (owner cost directive) |
 | 020 | Free security self-assessment at launch; paid pentest after revenue | **Accepted** (owner, 2026-11-17) |
+| 021 | Node 24 LTS and TypeScript 6.0 | **Accepted** (owner, 2026-11-17) |
+| 022 | Local ESLint architecture rules instead of eslint-plugin-boundaries | **Accepted** (owner, 2026-11-17) |
 
 ---
 
@@ -262,3 +264,26 @@ Any ADR that changes a locked decision in MASTER_SPEC §2 needs explicit owner a
 **Consequences.**
 - ✅ Saves ₹1–3 lakh before revenue.
 - ⚠️ Somewhat higher residual risk at launch. It is mitigated by keeping the tenant-isolation test suite mandatory.
+
+## ADR-021 — Node 24 LTS and TypeScript 6.0
+**Context.** The docs said Node 22. By Nov 2026, Node 24 is the active LTS, supported until 2028. TypeScript 7.0 (the native Go port) is out, but typescript-eslint supports only TypeScript versions below 6.1.
+
+**Decision.**
+- Use Node 24 LTS, pinned in `.nvmrc` and `engines`.
+- Use TypeScript **6.0.3**, the newest version the lint tooling supports. Revisit TS 7 when typescript-eslint supports it.
+- Since TS 6 no longer loads Node types by default, the shared base config sets `"types": ["node"]`, and browser packages override it.
+
+**Consequences.** Longer runtime support at no cost. Docker images use `node:24`.
+
+## ADR-022 — Local architecture lint rules
+**Context.** The Phase 1 plan named `eslint-plugin-boundaries`. Its v7 rewrite moved the module-entry-point rules to a new policy API that is documented only on its website, so its behaviour was hard to verify.
+
+**Decision.** A small local ESLint plugin (`tooling/eslint/architecture-plugin.js`, about 60 lines) enforces exactly the two rules needed:
+1. Cross-module imports go only through `modules/<name>/index`.
+2. Mongoose models are imported only from the same module's `repositories/` (ADR-007).
+
+Fixture tests in `tooling/architecture-rules.test.ts` prove both rules.
+
+**Consequences.**
+- ✅ One fewer dependency, and the rule behaviour is fully known and tested.
+- ⚠️ We maintain these ~60 lines ourselves.

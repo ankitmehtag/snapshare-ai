@@ -1,0 +1,9 @@
+# Git hooks (installed by `pnpm install`). Requires gitleaks: `brew install gitleaks`.
+pre-commit:
+  parallel: true
+  commands:
+    secrets:
+      run: gitleaks git --staged --redact --no-banner
+    format:
+      glob: '*.{ts,tsx,js,json,md,yml,yaml}'
+      run: pnpm exec prettier --check {staged_files}
