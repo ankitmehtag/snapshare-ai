@@ -169,7 +169,7 @@ One user account can be personal, belong to several studios, or both. An account
 - **FR-TEN-1:** A user can belong to several studios with different roles. All studio resources are scoped by `tenantId`, which the server resolves from membership.
 - **FR-EVT-1:** A studio can create events with albums, a cover, a date, a venue, gallery settings (visibility, PIN, expiry, downloads) and a watermark preset.
 - **FR-UPL-1:** Uploads go directly to object storage through presigned multipart URLs. They are resumable after a refresh and support 10,000+ files per session. Duplicates are detected by content hash and perceptual hash.
-- **FR-MED-1:** Each photo gets thumbnail (400px), preview (1600px), web (2560px) and watermarked-preview derivatives. The original is never modified.
+- **FR-MED-1:** Each photo gets thumbnail (400px), preview (1200px), web (2048px) and watermarked-preview derivatives, sized for low storage cost without visible quality loss (INFRASTRUCTURE §4.1). The original is never modified.
 - **FR-AI-1:** A guest who has given consent uploads a selfie. Within 30 seconds (p95, warm GPU) they see the photos they matched in that event only.
 - **FR-AI-2:** Consent is recorded with its version, timestamp, scope (one event, one studio, or personal) and an IP hash. Revocation deletes embeddings within 24 hours.
 - **FR-AI-3:** Non-biometric discovery is always available (album browsing, time filter, photographer-tagged names).

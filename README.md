@@ -19,8 +19,8 @@ Self-hosted, AI-powered photography SaaS for professional photographers, studios
 |---|---|---|
 | 1 — Product | PRD, User Journeys, Screen Inventory | ✅ Approved |
 | 2 — Architecture & Data | Architecture, Database Schema, API Spec, OpenAPI, Decisions | ✅ Approved |
-| 3 — AI, Security, Infra | AI Architecture, Security & Threat Model, Infrastructure, Deployment, Testing | 🟡 In progress |
-| 4 — Roadmap & Risks | Implementation Plan, Risk Register, Architectural Gaps | ⚪ Not started |
+| 3 — AI, Security, Infra | AI Architecture, Security & Threat Model, Infrastructure, Deployment, Testing | ✅ Approved |
+| 4 — Roadmap & Risks | Implementation Plan, Risk Register, Architectural Gaps | 🟡 In progress |
 
 ## Document index
 
@@ -34,10 +34,10 @@ Self-hosted, AI-powered photography SaaS for professional photographers, studios
 | [DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md) | Collections, indexes, relationships | 2 |
 | [API_SPEC.md](docs/API_SPEC.md) + [openapi/](docs/openapi/openapi.yaml) | REST contract | 2 |
 | [DECISIONS.md](docs/DECISIONS.md) | Architecture Decision Records | 2 |
-| AI_ARCHITECTURE.md | Self-hosted AI platform | 3 |
-| SECURITY.md | Threat model, controls, DPDP compliance | 3 |
-| INFRASTRUCTURE.md / DEPLOYMENT.md | Environments, scaling, ops | 3 |
-| TESTING.md | Test strategy and load tests | 3 |
+| [AI_ARCHITECTURE.md](docs/AI_ARCHITECTURE.md) | Self-hosted AI platform | 3 |
+| [SECURITY.md](docs/SECURITY.md) | Threat model, controls, DPDP compliance | 3 |
+| [INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md) / [DEPLOYMENT.md](docs/DEPLOYMENT.md) | Environments, scaling, costs, ops | 3 |
+| [TESTING.md](docs/TESTING.md) | Test strategy and load tests | 3 |
 | IMPLEMENTATION_PLAN.md | Phases 1–10 with acceptance criteria | 4 |
 | RISK_REGISTER.md | Risks, licensing, cost drivers | 4 |
 | ARCHITECTURAL_GAPS.md | Open decisions for the owner | 4 |
@@ -45,5 +45,7 @@ Self-hosted, AI-powered photography SaaS for professional photographers, studios
 ## Confirmed decisions (Phase 0)
 
 - **Stack:** exactly as Master Spec §4 (React/Vite/TS, Express/TS, MongoDB, Redis/BullMQ, Qdrant, FastAPI + ONNX Runtime, S3-compatible storage). InsForge is **not** used for this project.
+- **Hosting:** Hetzner servers outside India and Backblaze B2 storage behind Cloudflare, chosen for cost (ADR-018/019).
 - **Market:** India first. Razorpay is the primary payment provider and Stripe is secondary. Prices are in INR. Privacy compliance focuses on the DPDP Act 2023.
 - **Architecture:** modular monolith API, plus independently deployable workers and an AI service.
+- **Cost-first (ADR-015):** cheapest viable infrastructure at every stage. Any new recurring cost above ₹2,000/month needs owner approval.

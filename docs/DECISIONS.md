@@ -19,6 +19,12 @@ Any ADR that changes a locked decision in MASTER_SPEC §2 needs explicit owner a
 | 012 | Versioned plans; entitlements resolved and cached per scope | Accepted |
 | 013 | Monorepo with pnpm workspaces + Turborepo | Accepted |
 | 014 | Collections added beyond spec §10 | **Accepted** (owner, 2026-11-17) |
+| 015 | Cost-first infrastructure (owner directive) | **Accepted** (owner, 2026-11-17) |
+| 016 | CPU-first AI inference, GPU on demand (scale-to-zero) | Accepted (Batch 3) |
+| 017 | Self-hosted observability on the same box at launch | Accepted (Batch 3) |
+| 018 | Cheaper hosting outside India (Hetzner) | **Accepted** (owner, 2026-11-17) |
+| 019 | Backblaze B2 behind Cloudflare as primary object storage | Accepted (owner cost directive) |
+| 020 | Free security self-assessment at launch; paid pentest after revenue | **Accepted** (owner, 2026-11-17) |
 
 ---
 
@@ -183,3 +189,76 @@ Any ADR that changes a locked decision in MASTER_SPEC §2 needs explicit owner a
 | `exportJobs` | §3B data export, zip downloads, selection export |
 | `abuseReports` | §3C abuse reporting |
 | `customDomains` | §14 custom domains |
+
+## ADR-015 — Cost-first infrastructure (owner directive)
+**Context.** The owner's instruction (2026-11-17) was: "expenses dhyan rakhna, kam se kam aaye", meaning keep expenses as low as possible. Revenue starts at zero, and spec §2 (self-hosted, scalable) still applies.
+
+**Decision.** These principles apply to every infrastructure and vendor choice:
+1. **Pay for usage, not capacity.** Prefer scale-to-zero (GPU), egress-free storage (Cloudflare R2), and free tiers.
+2. **Self-host open source on cheap VPS/bare metal** rather than managed SaaS, while the operational burden stays reasonable.
+3. **Start on as few machines as possible.** Compose on 1–2 servers. Kubernetes only when it pays for itself.
+4. **Architecture stays scale-ready** (stateless services, queues, separate deployables), so growing means adding machines, not rewriting.
+5. **Every doc that adds infrastructure shows an INR monthly estimate.** Any new recurring cost above ₹2,000/month needs owner approval.
+
+**Consequences.**
+- ✅ Very low burn at launch.
+- ⚠️ We take on more ops work (backups, patching), which is mitigated by scripts and runbooks.
+- ⚠️ Some availability targets (99.9%) only apply from Stage 2 (INFRASTRUCTURE.md).
+
+## ADR-016 — CPU-first AI, GPU on demand
+**Context.** GPUs are the single largest potential cost. Light face detection and embedding models run acceptably on modern CPUs through ONNX Runtime. Spec §2 asks for GPU workers but doesn't require them to run all the time.
+
+**Decision.**
+- The ai-service supports `cpu` and `cuda` execution providers from the same code.
+- At launch, indexing runs on **CPU workers**.
+- An on-demand GPU node, billed hourly and scaled from zero, is started automatically **only when** `ai.face.index` lag exceeds the SLA threshold, for example during a big wedding upload.
+- Selfie matching (one image) always runs on CPU.
+
+**Consequences.**
+- ✅ GPU cost is ₹0 when idle.
+- ⚠️ Indexing during peaks is slower until the GPU node boots (about 3–5 minutes).
+- ⚠️ The provider choice must support hourly billing and an API to start and stop nodes.
+
+## ADR-017 — Self-hosted observability, minimal footprint
+**Decision.**
+- Prometheus + Grafana + Loki run on the ops/primary box.
+- Errors go to **GlitchTip**, which is self-hosted and Sentry-SDK compatible, or to the Sentry free tier while volume stays inside it.
+- OpenTelemetry traces are sampled at 5% and sent to Grafana Tempo with 7-day retention.
+
+**Consequences.** Spec §4 tooling is kept (the Sentry SDK and the OTel SDK) at no or near-zero cost. If error volume outgrows the free tier, we stay on GlitchTip.
+
+## ADR-018 — Cheaper hosting outside India
+**Context.** Batch 3 asked whether to host in India (safer under DPDP, more expensive) or outside India (cheaper). The owner chose cheaper on 2026-11-17: "move it to cheaper".
+
+**Decision.**
+- Compute runs on **Hetzner**: dedicated AX-line servers for steady load, cloud instances for flexible load. Use the Singapore location if available for lower latency, otherwise Germany/Finland.
+- GPU bursts use hourly marketplaces (RunPod/Vast.ai).
+
+**Consequences.**
+- ✅ Compute costs about 3–5× less for the same hardware, with no quality reduction.
+- ⚠️ API latency rises about 120–150 ms from India. Images are unaffected because they are served from Cloudflare's India edge.
+- ⚠️ The privacy policy must disclose cross-border processing, and a lawyer confirms this (SECURITY §8).
+- ⚠️ Biometric vectors live outside India, which is lawful under DPDP s.16 unless the destination country is restricted. This is re-checked when the restricted list is published.
+
+## ADR-019 — Backblaze B2 behind Cloudflare
+**Context.** Storage is the biggest variable cost (INFRASTRUCTURE §4.1).
+
+**Decision.**
+- Primary bucket: Backblaze B2 (EU region, S3-compatible API). Delivery goes through the Cloudflare Worker media gateway, which signs origin requests (aws4fetch).
+- B2 → Cloudflare egress is free (Bandwidth Alliance).
+- Cloudflare R2 is the drop-in fallback through the same S3 abstraction.
+- Where other docs say "R2", read it as "the primary S3-compatible bucket".
+
+**Consequences.**
+- ✅ About 60% cheaper storage with the same 11-nines durability design and zero egress.
+- ⚠️ Downloads that bypass Cloudflare (direct presigned original downloads) are billed by B2 beyond the free allowance (3× stored data per month). To avoid this, route original downloads through the gateway as well.
+- ⚠️ Verify current B2 pricing and Bandwidth Alliance terms before Phase 1 setup.
+
+## ADR-020 — Security testing on a budget
+**Decision.**
+- At launch: a free self-assessment against ASVS L2, plus ZAP, Nuclei, Semgrep and Trivy, plus the automated tenant-isolation suite.
+- A paid external pentest happens once MRR passes ₹2 lakh or an Enterprise customer requires it.
+
+**Consequences.**
+- ✅ Saves ₹1–3 lakh before revenue.
+- ⚠️ Somewhat higher residual risk at launch. It is mitigated by keeping the tenant-isolation test suite mandatory.

@@ -667,7 +667,7 @@ Phase 7+, for semantic search.
 |---|---|---|
 | Selfie images (match queries) | Deleted right after embedding; lifecycle backstop of 1 day on `tmp/selfies/` | ai-service deletes; bucket lifecycle |
 | Guest reference embeddings | Until the gallery expires or 90 days, whichever comes first; immediately on revocation (SLA 24 h) | `ai.face.delete` job + Qdrant delete by filter `faceProfileId` |
-| Photo face embeddings | Life of the photo or event; deleted with the photo, event or account; deleted when event AI is disabled | Cascade job → Qdrant delete by `photoId` / `eventId` filter |
+| Photo face embeddings | Gallery expiry + 30 days (or 1 year after the event if there is no expiry), whichever comes first; deleted earlier with the photo, event or account, or when event AI is disabled. Keeps bystander data minimal and Qdrant small (cost) | Cascade job → Qdrant delete by `photoId` / `eventId` filter; nightly expiry sweeper |
 | Originals and variants | Until the photographer or user deletes them, or the account is deleted | Soft delete → 30-day trash → hard delete of objects + documents |
 | Deleted account | 7-day grace period → full purge (photos, biometrics, personal data); billing records kept 8 years (Indian tax law: verify) with PII minimized | `deletion.cascade` multi-step job with a checkpoint per collection; audit entry |
 | Studio deletion | 30-day grace period; owner warned; guests' saved matches removed | Same cascade |
