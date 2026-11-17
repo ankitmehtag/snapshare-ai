@@ -113,7 +113,7 @@ jobs:
       - run: pnpm audit --prod --audit-level high
 
   integration:
-    name: Integration — MongoDB, Valkey, Qdrant
+    name: Integration — MongoDB, Valkey, Qdrant, Mailpit
     needs: changes
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-24.04
@@ -122,7 +122,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Start the data services first so image pulls overlap with pnpm install.
       - name: Start data services
-        run: docker compose -f infrastructure/docker/compose.yml up -d mongo redis qdrant
+        run: docker compose -f infrastructure/docker/compose.yml up -d mongo redis qdrant mailpit
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -130,7 +130,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Wait for data services
-        run: docker compose -f infrastructure/docker/compose.yml up -d --wait mongo redis qdrant
+        run: docker compose -f infrastructure/docker/compose.yml up -d --wait mongo redis qdrant mailpit
       - run: pnpm test:integration
       - name: Service logs on failure
         if: failure()

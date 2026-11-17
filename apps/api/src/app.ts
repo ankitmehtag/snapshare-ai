@@ -12,6 +12,7 @@ import { rateLimit } from './kernel/rate-limit.js';
 import { genRequestId } from './kernel/request-id.js';
 import { RouteRegistry } from './kernel/routes.js';
 import { corsPolicy, securityHeaders } from './kernel/security.js';
+import { csrfProtection } from './kernel/csrf.js';
 
 export interface AppDeps {
   env: Pick<ApiEnv, 'NODE_ENV' | 'CORS_ORIGINS' | 'TRUST_PROXY'>;
@@ -19,6 +20,8 @@ export interface AppDeps {
   redis: Redis;
   readinessChecks: Record<string, ReadinessCheck>;
   metrics?: ApiMetrics;
+  /** Feature modules, mounted under /api/v1 (identity from Phase 2). */
+  modules?: ((api: Router, registry: RouteRegistry) => void)[];
 }
 
 export function createApp(deps: AppDeps): { app: Express; registry: RouteRegistry } {
@@ -51,7 +54,9 @@ export function createApp(deps: AppDeps): { app: Express; registry: RouteRegistr
   app.use(cookieParser());
 
   const api = Router();
-  // Feature modules mount here from Phase 2 onward: api.use(identityRoutes(registry, ...)).
+  // Every state-changing API request must pass Origin + double-submit CSRF checks.
+  api.use(csrfProtection(deps.env.CORS_ORIGINS));
+  for (const mount of deps.modules ?? []) mount(api, registry);
   app.use('/api/v1', api);
 
   if (deps.env.NODE_ENV !== 'production') {

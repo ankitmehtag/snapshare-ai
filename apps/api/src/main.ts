@@ -3,6 +3,13 @@ import { EnvValidationError } from '@snapshare/config';
 import { connectMongo, createLogger, createRedis } from '@snapshare/server-kit';
 import { createApp } from './app.js';
 import { loadApiEnv } from './env.js';
+import {
+  createIdentityModule,
+  hibpChecker,
+  keysFromEnv,
+  noBreachCheck,
+  turnstileVerifier,
+} from './modules/identity/index.js';
 import { ApiMetrics } from './kernel/metrics.js';
 import { createSocketServer } from './socket.js';
 
@@ -24,11 +31,29 @@ async function main() {
   const metrics = new ApiMetrics();
   const metricsServer = env.METRICS_PORT ? metrics.listen(env.METRICS_PORT) : undefined;
 
+  if (!env.AUTH_JWT_PRIVATE_KEY) {
+    logger.warn('AUTH_JWT_PRIVATE_KEY not set: using an ephemeral signing key (dev only)');
+  }
+  const identity = await createIdentityModule({
+    redis,
+    logger,
+    keys: keysFromEnv(env),
+    captcha: turnstileVerifier(env.TURNSTILE_SECRET_KEY, logger),
+    breach: env.HIBP_ENABLED ? hibpChecker(logger) : noBreachCheck,
+    appUrl: env.APP_URL,
+    cookies: {
+      secure: env.COOKIE_SECURE ?? env.NODE_ENV === 'production',
+      domain: env.COOKIE_DOMAIN,
+    },
+    ipHashSecret: env.IP_HASH_SECRET,
+  });
+
   const { app } = createApp({
     env,
     logger,
     redis,
     metrics,
+    modules: [identity.mount],
     readinessChecks: {
       mongo: async () => {
         await mongoose.connection.db!.admin().ping();

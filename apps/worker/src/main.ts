@@ -1,5 +1,6 @@
 import { EnvValidationError } from '@snapshare/config';
 import { connectMongo, createLogger, createRedis } from '@snapshare/server-kit';
+import { smtpMailer } from './email/mailer.js';
 import { loadWorkerEnv } from './env.js';
 import { parseRoles } from './roles.js';
 import { startWorkers } from './run.js';
@@ -23,8 +24,20 @@ async function main() {
   const mongoose = await connectMongo(env.MONGO_URL);
   const redis = createRedis(env.REDIS_URL, { forQueues: true });
 
+  const mailer = roles.includes('notify')
+    ? smtpMailer({
+        host: env.SMTP_HOST,
+        port: env.SMTP_PORT,
+        secure: env.SMTP_SECURE,
+        user: env.SMTP_USER,
+        pass: env.SMTP_PASS,
+        from: env.MAIL_FROM,
+      })
+    : undefined;
+
   const running = await startWorkers({
     roles,
+    ...(mailer ? { mailer } : {}),
     redis,
     logger,
     nodeEnv: env.NODE_ENV,
@@ -47,6 +60,7 @@ async function main() {
     logger.info({ signal }, 'draining workers');
     const force = setTimeout(() => process.exit(1), 60_000).unref();
     await running.stop();
+    mailer?.close();
     await mongoose.disconnect();
     redis.disconnect();
     clearTimeout(force);

@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
-import { objectId } from './index.js';
+import { objectId } from './primitives.js';
 
 /**
  * Opaque, tamper-proof cursors (API_SPEC §1.4): base64url(JSON) + "." + HMAC.

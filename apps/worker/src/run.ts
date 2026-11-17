@@ -3,6 +3,7 @@ import type { QueueName } from '@snapshare/config';
 import { OutboxRelay, createQueue, createWorker, type Logger } from '@snapshare/server-kit';
 import type { Queue, Worker } from 'bullmq';
 import type { Redis } from 'ioredis';
+import type { Mailer } from './email/mailer.js';
 import { PROCESSORS } from './processors/index.js';
 import { ROLES, type Role } from './roles.js';
 
@@ -13,6 +14,7 @@ export interface RunDeps {
   nodeEnv: 'development' | 'test' | 'production';
   readinessChecks: Record<string, () => Promise<void>>;
   healthPort?: number;
+  mailer?: Mailer;
 }
 
 export interface Running {
@@ -53,11 +55,15 @@ export async function startWorkers(deps: RunDeps): Promise<Running> {
         if (!testOnlyInProd) idleQueues.push(name);
         continue;
       }
-      const { worker, deadLetters } = createWorker(name, factory({ logger: deps.logger }), {
-        connection: deps.redis,
-        logger: deps.logger,
-        nodeEnv: deps.nodeEnv,
-      });
+      const { worker, deadLetters } = createWorker(
+        name,
+        factory({ logger: deps.logger, ...(deps.mailer ? { mailer: deps.mailer } : {}) }),
+        {
+          connection: deps.redis,
+          logger: deps.logger,
+          nodeEnv: deps.nodeEnv,
+        },
+      );
       workers.push(worker);
       closables.push(deadLetters);
     }

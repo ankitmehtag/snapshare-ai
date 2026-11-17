@@ -37,6 +37,8 @@ export default tseslint.config(
   },
   {
     files: ['**/src/modules/**/*.{ts,tsx,js}'],
+    // Tests may read models directly to assert what was persisted; production code may not.
+    ignores: ['**/*.test.ts'],
     plugins: { architecture },
     rules: {
       'architecture/module-boundaries': 'error',

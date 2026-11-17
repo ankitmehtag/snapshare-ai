@@ -42,6 +42,8 @@ export type ErrorCode =
   | 'UNAUTHENTICATED'
   | 'TOKEN_EXPIRED'
   | 'MFA_REQUIRED'
+  | 'TOKEN_INVALID'
+  | 'CAPTCHA_REQUIRED'
   | 'FORBIDDEN'
   | 'ENTITLEMENT_REQUIRED'
   | 'CSRF_FAILED'
@@ -70,3 +72,49 @@ export interface Paginated<T> {
 
 /** Route scope classes used by the route registry and isolation tests (TESTING §4). */
 export type RouteScope = 'studio' | 'personal' | 'public' | 'admin' | 'internal' | 'system';
+
+/** A workspace the signed-in user can switch to (GL-01). Studios arrive in Phase 2B. */
+export interface Workspace {
+  type: ScopeType;
+  id: string;
+  name: string;
+  slug?: string;
+  roleKey?: string;
+}
+
+/** `GET /me` response (API_SPEC §2.1). */
+export interface Me {
+  id: string;
+  email: string;
+  emailVerified: boolean;
+  name: string;
+  locale: 'en' | 'hi';
+  timezone: string;
+  platformRole: PlatformRole;
+  workspaces: Workspace[];
+}
+
+/** One signed-in device (GL-03). */
+export interface SessionInfo {
+  id: string;
+  browser: string;
+  os: string;
+  createdAt: string;
+  lastSeenAt: string;
+  current: boolean;
+}
+
+/** Transactional email templates rendered by the notify worker. */
+export type EmailTemplate =
+  'verify_email' | 'account_exists' | 'password_reset' | 'password_changed';
+
+/**
+ * Payload of a `notify.email` job (written to the outbox by the API). `data` holds
+ * only what the template shows; links carry single-use tokens that expire (1–24 h).
+ */
+export interface EmailJob {
+  template: EmailTemplate;
+  to: string;
+  locale: 'en' | 'hi';
+  data: Record<string, string>;
+}
