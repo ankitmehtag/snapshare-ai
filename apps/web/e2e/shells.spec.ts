@@ -3,8 +3,17 @@ import { expect, test } from '@playwright/test';
 
 const pages = [
   { path: '/', heading: /Every guest gets their photos/ },
-  { path: '/studio/lens-story/events', heading: 'Events' },
-  { path: '/me/privacy', heading: 'Privacy & face data' },
+  // Signed-out visits to signed-in areas land on log in (the studio area itself is
+  // covered with a real session in phase2-journey.spec.ts).
+  { path: '/studio/lens-story/events', heading: 'Welcome back' },
+  { path: '/me/privacy', heading: 'Welcome back' },
+  { path: '/signup', heading: 'Create your account' },
+  { path: '/forgot', heading: 'Reset your password' },
+  { path: '/legal/biometric', heading: 'Biometric Data Notice' },
+  {
+    path: '/invite/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+    heading: "We couldn't find this invitation",
+  },
   { path: '/admin/queues', heading: 'Queues & jobs' },
   { path: '/g/aB3dE5fG7h', heading: 'Gallery' },
   { path: '/no/such/page', heading: 'Page not found' },
@@ -39,19 +48,19 @@ test('dark mode toggle persists across reloads', async ({ page }) => {
   await expect(html).toHaveClass(wasDark ? /^(?!.*dark)/ : /dark/);
 });
 
-test('language switch to Hindi translates navigation', async ({ page, isMobile }) => {
-  await page.goto('/studio/lens-story/events');
+test('language switch to Hindi translates the page', async ({ page }) => {
+  await page.goto('/login');
   await page.getByLabel('Language').selectOption('hi');
-  if (isMobile) await page.getByRole('button', { name: 'Open menu' }).click();
-  await expect(page.getByRole('link', { name: 'इवेंट' }).first()).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'फिर से स्वागत है' })).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('lang', 'hi');
 });
 
 test('mobile menu opens and navigates', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'mobile-only behaviour');
-  await page.goto('/me');
+  // The admin area is not sign-in gated until Phase 9, so it exercises the app shell.
+  await page.goto('/admin');
   await page.getByRole('button', { name: 'Open menu' }).click();
-  await page.getByRole('dialog').getByRole('link', { name: 'Albums' }).click();
-  await expect(page).toHaveURL(/\/me\/albums$/);
+  await page.getByRole('dialog').getByRole('link', { name: 'Users' }).click();
+  await expect(page).toHaveURL(/\/admin\/users$/);
   await expect(page.getByRole('dialog')).toBeHidden();
 });

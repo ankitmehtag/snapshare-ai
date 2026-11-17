@@ -24,13 +24,61 @@ function readCookie(name: string): string | undefined {
   return match ? decodeURIComponent(match.slice(name.length + 1)) : undefined;
 }
 
+let csrfRequest: Promise<void> | undefined;
+
+/** Fetches the double-submit cookie once if the browser doesn't have it yet. */
+async function ensureCsrf(): Promise<void> {
+  if (readCookie(CSRF_COOKIE)) return;
+  csrfRequest ??= request<unknown>('/auth/csrf', {})
+    .then(() => undefined)
+    .finally(() => {
+      csrfRequest = undefined;
+    });
+  await csrfRequest;
+}
+
+let refreshRequest: Promise<boolean> | undefined;
+
+/** One refresh shared by every request that hit TOKEN_EXPIRED at the same time. */
+function refreshSession(): Promise<boolean> {
+  refreshRequest ??= request<unknown>('/auth/refresh', { method: 'POST' })
+    .then(() => true)
+    .catch(() => false)
+    .finally(() => {
+      refreshRequest = undefined;
+    });
+  return refreshRequest;
+}
+
+/** Paths that must never trigger an automatic refresh-and-retry. */
+const NO_RETRY = new Set(['/auth/refresh', '/auth/login', '/auth/logout', '/auth/csrf']);
+
 /**
  * fetch wrapper used by every query/mutation:
  * - sends cookies (HttpOnly session cookies — ADR-008)
- * - adds the double-submit CSRF header on state-changing requests
+ * - fetches and adds the double-submit CSRF header on state-changing requests
+ * - on TOKEN_EXPIRED, refreshes the session once and retries (API_SPEC §1.3)
  * - turns RFC 9457 problem responses into ApiError
  */
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const method = (init.method ?? 'GET').toUpperCase();
+  if (!SAFE_METHODS.has(method)) await ensureCsrf();
+  try {
+    return await request<T>(path, init);
+  } catch (err) {
+    if (
+      err instanceof ApiError &&
+      err.code === 'TOKEN_EXPIRED' &&
+      !NO_RETRY.has(path) &&
+      (await refreshSession())
+    ) {
+      return request<T>(path, init);
+    }
+    throw err;
+  }
+}
+
+async function request<T>(path: string, init: RequestInit): Promise<T> {
   const method = (init.method ?? 'GET').toUpperCase();
   const headers = new Headers(init.headers);
   headers.set('Accept', 'application/json');
@@ -82,3 +130,9 @@ export function pageQuery(cursor: string | null | undefined, limit = 50): string
 
 export const nextCursor = <T>(page: Paginated<T>) =>
   page.page.hasMore ? page.page.nextCursor : null;
+
+/** JSON body helper: `apiFetch(path, json('POST', body))`. */
+export const json = (method: 'POST' | 'PATCH' | 'DELETE' | 'PUT', body?: unknown): RequestInit => ({
+  method,
+  ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+});

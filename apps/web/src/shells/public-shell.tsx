@@ -1,9 +1,12 @@
 import { Brand, buttonVariants } from '@snapshare/ui';
 import { Link, Outlet } from 'react-router';
+import { useMe } from '../lib/session';
 import { PreferenceControls } from './preferences';
+import { WorkspaceMenu } from './workspace-menu';
 
 /** Marketing, auth and account pages. */
 export function PublicShell() {
+  const me = useMe();
   return (
     <div className="flex min-h-dvh flex-col">
       <a
@@ -28,9 +31,13 @@ export function PublicShell() {
             >
               Pricing
             </Link>
-            <Link to="/login" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
-              Log in
-            </Link>
+            {me.data ? (
+              <WorkspaceMenu />
+            ) : (
+              <Link to="/login" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+                Log in
+              </Link>
+            )}
           </nav>
           <PreferenceControls />
         </div>

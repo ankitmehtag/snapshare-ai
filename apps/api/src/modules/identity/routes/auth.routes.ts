@@ -20,6 +20,11 @@ import { z } from '../../../kernel/zod.js';
 import type { AuthService, ClientMeta, IssuedSession } from '../services/auth.service.js';
 
 export const REFRESH_COOKIE = 'rt';
+/**
+ * Readable "probably signed in" hint for the SPA, so anonymous visitors never trigger
+ * a /me request. Carries no secret: the real session is the HttpOnly cookies.
+ */
+export const SESSION_HINT_COOKIE = 'ss_session';
 /** The refresh token is only ever sent to the auth endpoints. */
 const REFRESH_PATH = '/api/v1/auth';
 
@@ -83,6 +88,7 @@ export function mountAuthRoutes(api: Router, registry: RouteRegistry, deps: Auth
     // The cookie outlives the 10-minute JWT on purpose: an expired JWT must still
     // reach the API so it can answer TOKEN_EXPIRED and the client refreshes.
     res.cookie(ACCESS_COOKIE, s.accessToken, { ...base, httpOnly: true, path: '/', maxAge });
+    res.cookie(SESSION_HINT_COOKIE, '1', { ...base, httpOnly: false, path: '/', maxAge });
     if (s.refreshToken) {
       res.cookie(REFRESH_COOKIE, s.refreshToken, {
         ...base,
@@ -95,6 +101,7 @@ export function mountAuthRoutes(api: Router, registry: RouteRegistry, deps: Auth
   const clearSession = (res: Response) => {
     res.clearCookie(ACCESS_COOKIE, { ...base, path: '/' });
     res.clearCookie(REFRESH_COOKIE, { ...base, path: REFRESH_PATH });
+    res.clearCookie(SESSION_HINT_COOKIE, { ...base, path: '/' });
   };
   const cookie = (req: Request, name: string) =>
     (req.cookies as Record<string, string | undefined> | undefined)?.[name];

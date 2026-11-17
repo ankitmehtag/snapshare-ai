@@ -227,7 +227,18 @@ export class TenancyService {
   async getStudio(ctx: AuthContext) {
     const studio = await studiosRepo.findById(scopeId(ctx));
     if (!studio) throw notFound();
-    return toStudioView(studio, ctx);
+    return { ...toStudioView(studio, ctx), seats: await this.seatUsage(ctx) };
+  }
+
+  /** Seats = active members + pending invitations (ST-40 usage meter). */
+  private async seatUsage(ctx: AuthContext) {
+    const [members, pending] = await Promise.all([
+      memberships.forScope(ctx.scope!).countDocuments({ status: 'active' }),
+      invitations
+        .forScope(ctx.scope!)
+        .countDocuments({ status: 'pending', expiresAt: { $gt: new Date() } }),
+    ]);
+    return { used: members + pending, limit: this.seatLimit(scopeId(ctx)) };
   }
 
   async updateStudio(

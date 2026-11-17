@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | ✅ Plan approved 2026-11-17 (owner: "aage ka kaam bhi continue rakhna, approved h sab") · Batch 2A ✅ approved · Batch 2B ✅ approved · Batch 2C 🔵 in progress |
+| Status | ✅ Plan approved 2026-11-17 (owner: "aage ka kaam bhi continue rakhna, approved h sab") · Batch 2A ✅ approved · Batch 2B ✅ approved · Batch 2C ✅ approved · Batch 2D 🔵 in progress |
 | Source | IMPLEMENTATION_PLAN.md Phase 2 · API_SPEC §1.2, §2.1–2.2 · DATABASE_SCHEMA §2–3 · SECURITY §3.1–3.2, §4, §6 · TESTING §3–4 · ARCHITECTURE §5 · ARCHITECTURAL_GAPS G10 |
 | Duration | ≈ 3 weeks of effort, delivered in **4 gated batches** |
 | Cost | **₹0.** Email goes to Mailpit locally; Turnstile uses Cloudflare's public test keys; Google OAuth is tested against a local fake OIDC issuer (test-only). Real keys are created at deploy time (Phase 6), all on free tiers |

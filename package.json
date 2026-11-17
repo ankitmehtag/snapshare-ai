@@ -22,7 +22,7 @@
     "infra:ai": "docker compose -f infrastructure/docker/compose.yml --profile ai up -d --build --wait",
     "infra:monitoring": "docker compose -f infrastructure/docker/compose.yml --profile monitoring up -d --wait",
     "migrate": "pnpm --filter @snapshare/api migrate",
-    "test:e2e": "pnpm --filter @snapshare/web build && pnpm --filter @snapshare/web test:e2e",
+    "test:e2e": "pnpm build && pnpm --filter @snapshare/web test:e2e",
     "licenses:check": "node tooling/check-licenses.js"
   },
   "devDependencies": {

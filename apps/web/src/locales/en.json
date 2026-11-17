@@ -25,7 +25,11 @@
     "flags": "Feature flags",
     "health": "System health"
   },
-  "areas": { "studio": "Studio", "personal": "Personal", "admin": "Platform admin" },
+  "areas": {
+    "studio": "Studio",
+    "personal": "Personal",
+    "admin": "Platform admin"
+  },
   "comingSoon": {
     "title": "{{title}} is coming in Phase {{phase}}",
     "body": "This screen is planned and specified. It will be built in Phase {{phase}} of the roadmap — nothing here is live yet."
@@ -34,6 +38,217 @@
     "title": "Page not found",
     "body": "The page you’re looking for doesn’t exist or has moved."
   },
-  "theme": { "toggle": "Switch to {{mode}} mode", "light": "light", "dark": "dark" },
-  "language": { "label": "Language" }
+  "theme": {
+    "toggle": "Switch to {{mode}} mode",
+    "light": "light",
+    "dark": "dark"
+  },
+  "language": {
+    "label": "Language"
+  },
+  "common": {
+    "save": "Save changes",
+    "saved": "Saved",
+    "cancel": "Cancel",
+    "email": "Email",
+    "password": "Password",
+    "name": "Your name",
+    "loading": "Loading…",
+    "tryAgain": "Try again",
+    "back": "Back",
+    "continue": "Continue",
+    "signOut": "Sign out",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "securityCheck": "Security check",
+    "securityCheckHint": "Please complete the security check above.",
+    "required": "This field is required"
+  },
+  "auth": {
+    "signup": {
+      "title": "Create your account",
+      "subtitle": "Free during the beta. No card needed.",
+      "submit": "Create account",
+      "passwordHint": "At least 10 characters. A short phrase is easy to remember.",
+      "haveAccount": "Already have an account?",
+      "login": "Log in",
+      "sentTitle": "Check your inbox",
+      "sentBody": "If {{email}} can be used, we've sent a link to finish setting up your account. It expires in 24 hours.",
+      "terms": "By creating an account you agree to the draft Terms and Privacy Policy."
+    },
+    "login": {
+      "title": "Welcome back",
+      "submit": "Log in",
+      "forgot": "Forgot password?",
+      "noAccount": "New to SnapShare?",
+      "signup": "Create an account",
+      "captcha": "Please complete the security check to continue.",
+      "locked": "Too many attempts. Try again in {{minutes}} minutes.",
+      "inactive": "This account is not active."
+    },
+    "verify": {
+      "title": "Confirm your email",
+      "verifying": "Confirming your email…",
+      "verified": "Your email is confirmed",
+      "alreadyVerified": "This email is already confirmed",
+      "expired": "This link has expired",
+      "invalid": "This link isn't valid",
+      "used": "This link has already been used",
+      "continue": "Continue",
+      "resendTitle": "Need a new link?",
+      "resend": "Send a new link",
+      "resent": "If your account still needs confirming, a new link is on its way.",
+      "banner": "Please confirm your email address. We sent a link to {{email}}.",
+      "bannerAction": "Resend link"
+    },
+    "forgot": {
+      "title": "Reset your password",
+      "subtitle": "Enter your email and we'll send you a link to choose a new password.",
+      "submit": "Send reset link",
+      "sentTitle": "Check your inbox",
+      "sentBody": "If an account exists for {{email}}, you'll get a link to reset your password. It expires in 1 hour.",
+      "back": "Back to log in"
+    },
+    "reset": {
+      "title": "Choose a new password",
+      "submit": "Set new password",
+      "done": "Password changed. You've been signed out everywhere, so please log in again.",
+      "newPassword": "New password"
+    },
+    "invite": {
+      "title": "You're invited",
+      "body": "{{inviter}} invited you to join {{studio}} as {{role}}.",
+      "sentTo": "This invitation was sent to {{email}}.",
+      "accept": "Accept and join",
+      "signInToAccept": "Log in to accept",
+      "signUpToAccept": "Create an account to accept",
+      "wrongAccount": "You're signed in with a different email",
+      "wrongAccountBody": "This invitation was sent to {{email}}. Sign out and log in with that email to accept it.",
+      "expired": "This invitation has expired",
+      "revoked": "This invitation was cancelled",
+      "accepted": "This invitation has already been used",
+      "askAgain": "Ask the studio for a new invitation.",
+      "notFound": "We couldn't find this invitation"
+    }
+  },
+  "onboarding": {
+    "title": "How will you use SnapShare?",
+    "studio": "For my photography business",
+    "studioBody": "Upload events, share galleries with guests and clients, and manage your team.",
+    "personal": "For me and my family",
+    "personalBody": "Private albums and groups for family and friends.",
+    "personalSoon": "Coming in Phase 7",
+    "setupTitle": "Set up your studio",
+    "studioName": "Studio name",
+    "slug": "Studio web address",
+    "slugHint": "Your galleries will live at {{url}}",
+    "slugAvailable": "Available",
+    "slugTaken": "Already taken",
+    "slugChecking": "Checking…",
+    "create": "Create studio",
+    "verifyFirst": "Confirm your email first, then you can create your studio."
+  },
+  "account": {
+    "title": "Account settings",
+    "profile": "Profile",
+    "language": "Language",
+    "timezone": "Time zone",
+    "passwordTitle": "Change password",
+    "current": "Current password",
+    "new": "New password",
+    "changed": "Password changed. Other devices were signed out.",
+    "sessionsTitle": "Signed-in devices",
+    "sessionsBody": "Sign out of any device you don't recognise.",
+    "thisDevice": "This device",
+    "lastActive": "Last active {{when}}",
+    "signOutDevice": "Sign out",
+    "signOutOthers": "Sign out all other devices",
+    "noOthers": "No other devices are signed in.",
+    "revoked": "Signed out {{count}} device(s)."
+  },
+  "workspace": {
+    "switch": "Switch workspace",
+    "studios": "Studios",
+    "newStudio": "Create a studio",
+    "account": "Account settings",
+    "noAccess": "You don't have access to this studio",
+    "noAccessBody": "It may not exist, or you may not be a member. Ask the owner for an invitation."
+  },
+  "studioProfile": {
+    "title": "Studio profile",
+    "basics": "Basics",
+    "contact": "Contact",
+    "website": "Website",
+    "phone": "Phone",
+    "instagram": "Instagram",
+    "address": "Address",
+    "brand": "Brand colours",
+    "primary": "Primary colour",
+    "accent": "Accent colour",
+    "gstTitle": "GST details",
+    "gstOwnerOnly": "Only the owner can change billing details.",
+    "legalName": "Legal name",
+    "gstin": "GSTIN",
+    "stateCode": "State code",
+    "danger": "Delete studio",
+    "dangerBody": "Deleting starts a 30-day grace period. During it, you can cancel. Afterwards the studio and all its data are permanently removed.",
+    "deleteConfirm": "Enter your password to schedule deletion",
+    "delete": "Schedule deletion",
+    "pending": "This studio is scheduled for deletion on {{date}}.",
+    "cancelDeletion": "Cancel deletion"
+  },
+  "team": {
+    "title": "Team",
+    "seats": "Team seats",
+    "invite": "Invite someone",
+    "inviteEmail": "Email address",
+    "role": "Role",
+    "sendInvite": "Send invitation",
+    "invited": "Invitation sent to {{email}}.",
+    "members": "Members",
+    "pending": "Pending invitations",
+    "noPending": "No pending invitations.",
+    "you": "you",
+    "remove": "Remove",
+    "revoke": "Cancel invitation",
+    "expires": "Expires {{date}}",
+    "changeRoleFor": "Role for {{name}}",
+    "removeConfirm": "Remove {{name}} from the studio? They lose access immediately.",
+    "activity": "Activity",
+    "viewActivity": "View activity",
+    "readOnly": "You can view the team. Only owners and admins can make changes.",
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "editor": "Editor",
+      "uploader": "Uploader",
+      "viewer": "Viewer"
+    }
+  },
+  "activity": {
+    "title": "Team activity",
+    "empty": "Nothing has happened yet.",
+    "loadMore": "Load more",
+    "actions": {
+      "studio.created": "created the studio",
+      "studio.updated": "updated the studio profile",
+      "studio.deletion_requested": "scheduled the studio for deletion",
+      "studio.deletion_cancelled": "cancelled the studio deletion",
+      "studio.ownership_transferred": "transferred ownership",
+      "member.invited": "invited someone as {{roleKey}}",
+      "invitation.revoked": "cancelled an invitation",
+      "member.joined": "joined as {{roleKey}}",
+      "member.role_changed": "changed a role from {{from}} to {{to}}",
+      "member.removed": "removed a member"
+    }
+  },
+  "legal": {
+    "draft": "Draft — pending legal review. Not yet in force.",
+    "updated": "Version {{version}}",
+    "docs": {
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy",
+      "biometric": "Biometric Data Notice"
+    }
+  }
 }

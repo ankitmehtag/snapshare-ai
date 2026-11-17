@@ -63,3 +63,66 @@ describe('pageQuery', () => {
     expect(pageQuery('abc.def', 50)).toBe('?limit=50&cursor=abc.def');
   });
 });
+
+describe('apiFetch session handling', () => {
+  const expired = () =>
+    json(401, { title: 'expired', status: 401, code: 'TOKEN_EXPIRED' }, 'application/problem+json');
+
+  it('refreshes once on TOKEN_EXPIRED and retries the original request', async () => {
+    fetchMock
+      .mockResolvedValueOnce(expired())
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(json(200, { id: 'me' }));
+    await expect(apiFetch('/me')).resolves.toEqual({ id: 'me' });
+    expect(fetchMock.mock.calls.map((c) => c[0])).toEqual([
+      '/api/v1/me',
+      '/api/v1/auth/refresh',
+      '/api/v1/me',
+    ]);
+  });
+
+  it('shares one refresh between concurrent requests and gives up if it fails', async () => {
+    let refreshes = 0;
+    fetchMock.mockImplementation(async (url: string) => {
+      if (url.endsWith('/auth/refresh')) {
+        refreshes++;
+        return json(
+          401,
+          { title: 'x', status: 401, code: 'UNAUTHENTICATED' },
+          'application/problem+json',
+        );
+      }
+      return expired();
+    });
+    const results = await Promise.allSettled([apiFetch('/a'), apiFetch('/b'), apiFetch('/c')]);
+    expect(refreshes).toBe(1);
+    expect(results.every((r) => r.status === 'rejected')).toBe(true);
+  });
+
+  it('fetches the CSRF cookie before the first state-changing request', async () => {
+    fetchMock.mockImplementation(async (url: string) => {
+      if (url.endsWith('/auth/csrf')) {
+        document.cookie = 'csrf=fresh';
+        return json(200, { csrfToken: 'fresh' });
+      }
+      return new Response(null, { status: 204 });
+    });
+    await apiFetch('/auth/logout', { method: 'POST' });
+    expect(fetchMock.mock.calls[0]![0]).toBe('/api/v1/auth/csrf');
+    expect(new Headers(fetchMock.mock.calls[1]![1].headers).get('X-CSRF-Token')).toBe('fresh');
+  });
+});
+
+describe('safeNext (open-redirect guard)', async () => {
+  const { safeNext } = await import('./session');
+  it.each([
+    ['/studio/x/team', '/studio/x/team'],
+    ['https://evil.example', null],
+    ['//evil.example', null],
+    ['/\\evil.example', null],
+    ['javascript:alert(1)', null],
+    [null, null],
+  ])('%s → %s', (input, expected) => {
+    expect(safeNext(input)).toBe(expected);
+  });
+});

@@ -27,6 +27,22 @@ describe('screen inventory traceability', () => {
   });
 
   it('only marks screens ready when they are actually implemented', () => {
-    expect(SCREENS.filter((s) => s.ready).map((s) => s.id)).toEqual(['PUB-01']);
+    expect(SCREENS.filter((s) => s.ready).map((s) => s.id)).toEqual([
+      'PUB-01',
+      'PUB-03',
+      'AUTH-01',
+      'AUTH-02',
+      'AUTH-03',
+      'AUTH-04',
+      'AUTH-05',
+      'AUTH-06',
+      'ONB-01',
+      'ONB-02',
+      'GL-02',
+      'GL-03',
+      'ST-02',
+      'ST-40',
+      'ST-41',
+    ]);
   });
 });

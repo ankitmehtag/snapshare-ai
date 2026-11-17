@@ -23,8 +23,21 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Outlet, useParams } from 'react-router';
+import { RequireAuth } from '../lib/session';
+import { VerifyEmailBanner } from '../pages/auth/verify';
+import { StudioProvider } from '../pages/studio/studio-context';
 import { PreferenceControls } from './preferences';
 import { RouterNavLink } from './router-link';
+import { WorkspaceMenu } from './workspace-menu';
+
+function Topbar() {
+  return (
+    <div className="flex items-center gap-2">
+      <WorkspaceMenu />
+      <PreferenceControls />
+    </div>
+  );
+}
 
 export function StudioShell() {
   const { t } = useTranslation();
@@ -41,15 +54,20 @@ export function StudioShell() {
     { to: `${base}/settings/profile`, label: t('nav.settings'), icon: <Settings aria-hidden /> },
   ];
   return (
-    <AppShell
-      area="studio"
-      areaLabel={t('areas.studio')}
-      nav={nav}
-      linkComponent={RouterNavLink}
-      topbar={<PreferenceControls />}
-    >
-      <Outlet />
-    </AppShell>
+    <RequireAuth>
+      <AppShell
+        area="studio"
+        areaLabel={t('areas.studio')}
+        nav={nav}
+        linkComponent={RouterNavLink}
+        topbar={<Topbar />}
+      >
+        <VerifyEmailBanner />
+        <StudioProvider>
+          <Outlet />
+        </StudioProvider>
+      </AppShell>
+    </RequireAuth>
   );
 }
 
@@ -67,15 +85,17 @@ export function PersonalShell() {
     { to: '/me/billing', label: t('nav.billing'), icon: <CreditCard aria-hidden /> },
   ];
   return (
-    <AppShell
-      area="personal"
-      areaLabel={t('areas.personal')}
-      nav={nav}
-      linkComponent={RouterNavLink}
-      topbar={<PreferenceControls />}
-    >
-      <Outlet />
-    </AppShell>
+    <RequireAuth>
+      <AppShell
+        area="personal"
+        areaLabel={t('areas.personal')}
+        nav={nav}
+        linkComponent={RouterNavLink}
+        topbar={<Topbar />}
+      >
+        <Outlet />
+      </AppShell>
+    </RequireAuth>
   );
 }
 
