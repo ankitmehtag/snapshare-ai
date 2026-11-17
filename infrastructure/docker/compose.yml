@@ -91,12 +91,22 @@ services:
     depends_on:
       storage: { condition: service_healthy }
     entrypoint: ['/bin/sh', '-c']
+    # Creates the buckets, then idles (≈1 MB RAM) and reports healthy. An exited one-shot
+    # container makes `docker compose up --wait` fail on every re-run.
     command:
       - |
         for b in snapshare-media snapshare-tmp; do
           echo "s3.bucket.create -name $$b" | weed shell -master=storage:9333 || true
         done
-    restart: 'no'
+        touch /tmp/buckets-ready
+        exec sleep infinity
+    healthcheck:
+      test: ['CMD', 'test', '-f', '/tmp/buckets-ready']
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    mem_limit: 64m
+    restart: unless-stopped
 
   mailpit:
     # Catches all outgoing email locally: UI at http://localhost:8025
@@ -105,8 +115,62 @@ services:
     mem_limit: 128m
     restart: unless-stopped
 
+  # --- Optional profiles (Phase 1 Batch 1D). They stay off unless asked for, to spare a
+  # 16 GB laptop:  pnpm infra:ai  |  pnpm infra:monitoring
+
+  ai-service:
+    profiles: [ai]
+    build: { context: ../../apps/ai-service, target: cpu }
+    image: snapshare/ai-service:dev
+    environment:
+      NODE_ENV: development
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-snapshare-dev-qdrant-key}
+      AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:-dev-only-ai-service-token-0123456789abcdef}
+      AI_SCOPE_SIGNING_KEY: ${AI_SCOPE_SIGNING_KEY:-dev-only-ai-scope-key-0123456789abcdefgh}
+    ports: ['127.0.0.1:8000:8000']
+    depends_on:
+      qdrant: { condition: service_healthy }
+    mem_limit: 1g
+    restart: unless-stopped
+
+  prometheus:
+    profiles: [monitoring]
+    image: prom/prometheus:v3.7.3
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=3d
+    volumes:
+      - ../monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    # api and workers run on the host during development (pnpm dev).
+    extra_hosts: ['host.docker.internal:host-gateway']
+    ports: ['127.0.0.1:9090:9090']
+    mem_limit: 256m
+    restart: unless-stopped
+
+  grafana:
+    profiles: [monitoring]
+    image: grafana/grafana:12.2.1
+    environment:
+      # Local only (bound to 127.0.0.1): anonymous read-only viewer, no login prompt.
+      GF_AUTH_ANONYMOUS_ENABLED: 'true'
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_ANALYTICS_REPORTING_ENABLED: 'false'
+      GF_ANALYTICS_CHECK_FOR_UPDATES: 'false'
+    volumes:
+      - ../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports: ['127.0.0.1:3001:3000']
+    depends_on: [prometheus]
+    mem_limit: 256m
+    restart: unless-stopped
+
 volumes:
   mongo-data:
   redis-data:
   qdrant-data:
   storage-data:
+  prometheus-data:
+  grafana-data:

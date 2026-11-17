@@ -3,6 +3,7 @@ import { EnvValidationError } from '@snapshare/config';
 import { connectMongo, createLogger, createRedis } from '@snapshare/server-kit';
 import { createApp } from './app.js';
 import { loadApiEnv } from './env.js';
+import { ApiMetrics } from './kernel/metrics.js';
 import { createSocketServer } from './socket.js';
 
 async function main() {
@@ -20,11 +21,14 @@ async function main() {
   const logger = createLogger({ service: 'api', level: env.LOG_LEVEL, pretty: env.LOG_PRETTY });
   const mongoose = await connectMongo(env.MONGO_URL);
   const redis = createRedis(env.REDIS_URL);
+  const metrics = new ApiMetrics();
+  const metricsServer = env.METRICS_PORT ? metrics.listen(env.METRICS_PORT) : undefined;
 
   const { app } = createApp({
     env,
     logger,
     redis,
+    metrics,
     readinessChecks: {
       mongo: async () => {
         await mongoose.connection.db!.admin().ping();
@@ -53,6 +57,7 @@ async function main() {
     const force = setTimeout(() => process.exit(1), 10_000).unref();
     await new Promise<void>((resolve) => io.close(() => resolve()));
     await new Promise<void>((resolve) => http.close(() => resolve()));
+    metricsServer?.close();
     await mongoose.disconnect();
     redis.disconnect();
     clearTimeout(force);

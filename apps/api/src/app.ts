@@ -6,6 +6,7 @@ import type { Logger } from '@snapshare/server-kit';
 import type { ApiEnv } from './env.js';
 import { errorHandler, notFoundHandler } from './kernel/errors.js';
 import { healthRoutes, type ReadinessCheck } from './kernel/health.js';
+import type { ApiMetrics } from './kernel/metrics.js';
 import { buildOpenApiDocument } from './kernel/openapi.js';
 import { rateLimit } from './kernel/rate-limit.js';
 import { genRequestId } from './kernel/request-id.js';
@@ -17,6 +18,7 @@ export interface AppDeps {
   logger: Logger;
   redis: Redis;
   readinessChecks: Record<string, ReadinessCheck>;
+  metrics?: ApiMetrics;
 }
 
 export function createApp(deps: AppDeps): { app: Express; registry: RouteRegistry } {
@@ -33,6 +35,7 @@ export function createApp(deps: AppDeps): { app: Express; registry: RouteRegistr
       autoLogging: { ignore: (req) => req.url === '/health' || req.url === '/ready' },
     }),
   );
+  if (deps.metrics) app.use(deps.metrics.middleware());
   app.use(securityHeaders());
   app.use(corsPolicy(deps.env.CORS_ORIGINS));
 

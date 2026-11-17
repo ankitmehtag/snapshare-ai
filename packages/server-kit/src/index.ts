@@ -1,3 +1,4 @@
+export * from './ai-signing.js';
 export * from './connections.js';
 export * from './jobs.js';
 export * from './logger.js';

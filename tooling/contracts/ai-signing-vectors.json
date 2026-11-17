@@ -1,0 +1,41 @@
+{
+  "_comment": "Shared test vectors for ai-service request and scope signing. Python: apps/ai-service/app/security.py. Node: packages/server-kit/src/ai-signing.ts. Never real keys.",
+  "requestKey": "test-only-service-token-0123456789abcdef",
+  "scopeKey": "test-only-scope-signing-key-0123456789abc",
+  "requests": [
+    {
+      "timestamp": "1763337600",
+      "method": "POST",
+      "path": "/v1/faces/match",
+      "body": "{\"limit\":50,\"modelKey\":\"face\"}",
+      "signature": "8657cadefdeb4723640907f501d95e21471826907db0093d875f980e49b37071"
+    },
+    {
+      "timestamp": "1763337600",
+      "method": "GET",
+      "path": "/v1/models",
+      "body": "",
+      "signature": "36cec9aa21ec2156224a2dbbffbd93c81616b860f502bddd5af69a235bba6a32"
+    }
+  ],
+  "scopes": [
+    {
+      "scope": {
+        "scopeType": "studio",
+        "scopeId": "665f1c2ab3d4e5f6a7b8c9d0",
+        "eventId": "665f1c2ab3d4e5f6a7b8c9d1"
+      },
+      "canonical": "{\"eventId\":\"665f1c2ab3d4e5f6a7b8c9d1\",\"scopeId\":\"665f1c2ab3d4e5f6a7b8c9d0\",\"scopeType\":\"studio\"}",
+      "signature": "c80298de1f5b4e63be72c28e846dba0768d9f0aa753a1b2663624cf69fefa2e1"
+    },
+    {
+      "scope": {
+        "scopeType": "personal",
+        "scopeId": "665f1c2ab3d4e5f6a7b8c9d2",
+        "personalAlbumIds": ["665f1c2ab3d4e5f6a7b8c9e1", "665f1c2ab3d4e5f6a7b8c9e0"]
+      },
+      "canonical": "{\"personalAlbumIds\":[\"665f1c2ab3d4e5f6a7b8c9e1\",\"665f1c2ab3d4e5f6a7b8c9e0\"],\"scopeId\":\"665f1c2ab3d4e5f6a7b8c9d2\",\"scopeType\":\"personal\"}",
+      "signature": "eaca7f1d95578e2d3d75c0ccc641ac369a67cd552024a267fdf51305de965b06"
+    }
+  ]
+}

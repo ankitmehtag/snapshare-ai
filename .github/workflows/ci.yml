@@ -1,0 +1,255 @@
+# SnapShare CI (Phase 1 Batch 1D, DEPLOYMENT §4).
+#
+# Cost (ADR-015): this is a private repo on the free plan (2,000 Linux minutes/month).
+# - Path filters: each job runs only when its code changed.
+# - Few, fat jobs: every job is billed rounded UP to a whole minute.
+# - Caches: pnpm store, uv, Docker layers (GHA cache).
+# - Images are BUILT on main to prove the Dockerfiles, but PUSHED to GHCR only for a
+#   `v*` tag or a manual run with publish=true: private GHCR storage is free only up to
+#   500 MB, and every push of four images would eat into it.
+# Actions are pinned to full commit SHAs (supply-chain safety); the tag is in the comment.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Push the built images to GHCR
+        type: boolean
+        default: false
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  CI_SKIP_HOOKS: '1'
+  TURBO_TELEMETRY_DISABLED: '1'
+  DO_NOT_TRACK: '1'
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      node: ${{ steps.filter.outputs.node }}
+      backend: ${{ steps.filter.outputs.backend }}
+      ai: ${{ steps.filter.outputs.ai }}
+      images: ${{ steps.filter.outputs.images }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          filters: |
+            shared: &shared
+              - '.github/workflows/ci.yml'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+            node:
+              - *shared
+              - 'apps/web/**'
+              - 'apps/api/**'
+              - 'apps/worker/**'
+              - 'packages/**'
+              - 'tooling/**'
+              - 'turbo.json'
+              - 'tsconfig.base.json'
+              - 'eslint.config.js'
+              - 'vitest.config.ts'
+              - '.prettierrc*'
+              - '.prettierignore'
+            backend:
+              - *shared
+              - 'apps/api/**'
+              - 'apps/worker/**'
+              - 'packages/config/**'
+              - 'packages/server-kit/**'
+              - 'packages/types/**'
+              - 'packages/validators/**'
+              - 'infrastructure/docker/compose.yml'
+            ai:
+              - '.github/workflows/ci.yml'
+              - 'apps/ai-service/**'
+              - 'tooling/contracts/**'
+            images:
+              - *shared
+              - 'apps/**'
+              - 'packages/**'
+              - 'infrastructure/docker/**'
+
+  node:
+    name: Node — format, lint, typecheck, unit, licences, audit
+    needs: changes
+    if: needs.changes.outputs.node == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm build
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm licenses:check
+      - run: pnpm audit --prod --audit-level high
+
+  integration:
+    name: Integration — MongoDB, Valkey, Qdrant
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Start the data services first so image pulls overlap with pnpm install.
+      - name: Start data services
+        run: docker compose -f infrastructure/docker/compose.yml up -d mongo redis qdrant
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Wait for data services
+        run: docker compose -f infrastructure/docker/compose.yml up -d --wait mongo redis qdrant
+      - run: pnpm test:integration
+      - name: Service logs on failure
+        if: failure()
+        run: docker compose -f infrastructure/docker/compose.yml logs --tail 100
+
+  ai-service:
+    name: ai-service — ruff, mypy, pytest, pip-audit, licences
+    needs: changes
+    if: needs.changes.outputs.ai == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: apps/ai-service
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          working-directory: apps/ai-service
+          enable-cache: true
+          cache-dependency-glob: apps/ai-service/uv.lock
+      - run: uv sync --frozen
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy
+      - run: uv run pytest
+      - run: uv run pip-audit --strict
+      - run: uv run python scripts/check_licenses.py
+
+  security:
+    name: Security — gitleaks, Semgrep
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: gitleaks (full history)
+        run: >
+          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/repo" -w /repo ghcr.io/gitleaks/gitleaks:v8.30.0
+          git --redact --no-banner --exit-code 1 .
+      - name: Semgrep (p/default)
+        # The pnpm minimumReleaseAge rule is excluded until Phase 2 starts (on/after
+        # 2026-11-24); see the TODO in pnpm-workspace.yaml.
+        run: >
+          docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:1.181.1
+          semgrep scan --config p/default --metrics off --error --quiet --timeout 60
+          --exclude-rule package_managers.pnpm.pnpm-missing-minimum-release-age.pnpm-minimum-release-age
+
+  images:
+    name: Images — build (push on tag or manual publish)
+    needs: [changes, node, integration, ai-service, security]
+    # Runs after the checks pass or are skipped by path filters; never on PRs.
+    if: >-
+      always() && github.event_name != 'pull_request' &&
+      (needs.changes.outputs.images == 'true' || github.event_name != 'push' || startsWith(github.ref, 'refs/tags/')) &&
+      !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    env:
+      PUBLISH: ${{ startsWith(github.ref, 'refs/tags/v') || inputs.publish == true }}
+      REGISTRY: ghcr.io/${{ github.repository_owner }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        if: env.PUBLISH == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Image tag
+        id: tag
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT";
+          else echo "tag=sha-${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"; fi
+      # The three Node targets share one build stage: built in one job, the builder
+      # reuses it instead of compiling the monorepo three times.
+      - name: api
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: infrastructure/docker/node.Dockerfile
+          target: api
+          platforms: linux/amd64
+          push: ${{ env.PUBLISH == 'true' }}
+          tags: ${{ env.REGISTRY }}/snapshare-api:${{ steps.tag.outputs.tag }}
+          cache-from: type=gha,scope=node
+          cache-to: type=gha,scope=node,mode=max
+      - name: worker
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: infrastructure/docker/node.Dockerfile
+          target: worker
+          platforms: linux/amd64
+          push: ${{ env.PUBLISH == 'true' }}
+          tags: ${{ env.REGISTRY }}/snapshare-worker:${{ steps.tag.outputs.tag }}
+          cache-from: type=gha,scope=node
+      - name: web
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: infrastructure/docker/node.Dockerfile
+          target: web
+          platforms: linux/amd64
+          push: ${{ env.PUBLISH == 'true' }}
+          tags: ${{ env.REGISTRY }}/snapshare-web:${{ steps.tag.outputs.tag }}
+          cache-from: type=gha,scope=node
+      - name: ai-service (cpu)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: apps/ai-service
+          target: cpu
+          platforms: linux/amd64
+          push: ${{ env.PUBLISH == 'true' }}
+          tags: ${{ env.REGISTRY }}/snapshare-ai-service:${{ steps.tag.outputs.tag }}-cpu
+          cache-from: type=gha,scope=ai
+          cache-to: type=gha,scope=ai,mode=max

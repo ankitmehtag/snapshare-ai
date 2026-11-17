@@ -3,6 +3,8 @@ import { z } from 'zod';
 
 export const apiEnvSchema = baseEnvSchema.extend({
   PORT: z.coerce.number().int().positive().default(4000),
+  /** Internal Prometheus port; never routed by the edge proxy. 0 disables it. */
+  METRICS_PORT: z.coerce.number().int().min(0).default(9464),
   MONGO_URL: z.string().startsWith('mongodb', 'must be a mongodb:// URL'),
   REDIS_URL: z.string().startsWith('redis', 'must be a redis:// URL'),
   QDRANT_URL: z.url(),

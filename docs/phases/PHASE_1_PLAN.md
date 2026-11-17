@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | ✅ Plan approved 2026-11-17 · Batch 1A ✅ approved · Batch 1B ✅ approved · Batch 1C ✅ approved · Batch 1D 🔵 in progress |
+| Status | ✅ Plan approved 2026-11-17 · Batch 1A ✅ approved · Batch 1B ✅ approved · Batch 1C ✅ approved · Batch 1D ✅ approved · Phase 1 DoD 🔵 in progress |
 | Source | IMPLEMENTATION_PLAN.md Phase 1 · ARCHITECTURE.md · DEPLOYMENT.md · TESTING.md |
 | Duration | ≈ 2 weeks of effort, delivered in **4 gated batches** |
 | Cost | **₹0.** Everything runs on this Mac and in GitHub Actions' free minutes |

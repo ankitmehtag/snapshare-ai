@@ -4,3 +4,13 @@ packages:
 
 onlyBuiltDependencies:
   - lefthook
+
+# Supply-chain hardening (Semgrep pnpm rules):
+# - transitive deps only from the registry (no git/tarball URLs),
+# - refuse a version whose publish provenance is weaker than an earlier one.
+# TODO(phase-2 start, on/after 2026-11-24): add `minimumReleaseAge: 10080` (7-day
+# cooldown). Today 83 locked versions are younger than 7 days, so enabling it now would
+# force a mass downgrade; once they age it is a one-line change, and CI's Semgrep
+# exclusion for the rule is removed at the same time.
+blockExoticSubdeps: true
+trustPolicy: no-downgrade
