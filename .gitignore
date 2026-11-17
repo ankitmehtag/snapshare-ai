@@ -21,8 +21,10 @@ coverage/
 *.key
 .insforge/
 
-# AI model weights (never commit; fetched per license)
-models/
+# AI model weights (never commit; fetched per license). Anchored so code folders
+# named models/ (Mongoose schemas under apps/api/src/modules/*/models) are tracked.
+/models/
+apps/ai-service/models/
 *.onnx
 *.pt
 *.pth
