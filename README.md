@@ -2,7 +2,9 @@
 
 Self-hosted, AI-powered photography SaaS for professional photographers, studios, event organizers, and individuals/families.
 
-> **Status:** Phase 0 (Specification) ✅ complete. Waiting for the owner's instruction to plan Phase 1 (Foundation). No application code exists yet.
+> **Status:** Phase 0 (Specification) ✅ · Phase 1 (Foundation) ✅ complete: monorepo, local infrastructure, API/worker/web/ai-service skeletons, CI. **No product features yet**: every screen shows an honest "Coming in Phase N" page. Next: Phase 2 (Identity & tenancy) plan.
+>
+> [![CI](https://github.com/ankitmehtag/snapshare-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/ankitmehtag/snapshare-ai/actions/workflows/ci.yml)
 
 ## Getting started
 
@@ -13,13 +15,21 @@ pnpm install        # also installs git hooks (secret scan + format check)
 cp .env.example .env
 pnpm infra:up       # MongoDB (replica set), Valkey, Qdrant, SeaweedFS (S3), Mailpit
 pnpm build && pnpm migrate
-pnpm dev            # api on :4000, workers (all roles) with health on :4100
+pnpm dev            # web on :5173, api on :4000, workers (all roles) with health on :4100
 
 pnpm lint && pnpm typecheck && pnpm test   # fast checks
 pnpm test:integration                      # needs pnpm infra:up
+pnpm test:e2e                              # Playwright + axe (first run: pnpm --filter @snapshare/web exec playwright install chromium)
+
+# Optional (each off by default to spare laptop memory)
+pnpm infra:ai          # ai-service (CPU) on :8000 — cd apps/ai-service && uv sync && uv run pytest
+pnpm infra:monitoring  # Prometheus :9090, Grafana :3001 (dashboard "SnapShare — API RED")
+pnpm infra:down        # stop everything (infra:reset also deletes local data)
 ```
 
-Local tools: Mailpit UI at http://localhost:8025, API probes at http://localhost:4000/health and /ready, OpenAPI at http://localhost:4000/openapi.json (dev only).
+Local tools: web app at http://localhost:5173, Mailpit UI at http://localhost:8025, API probes at http://localhost:4000/health and /ready, OpenAPI at http://localhost:4000/openapi.json (dev only), API metrics at http://localhost:9464/metrics.
+
+CI (`.github/workflows/ci.yml`) runs on every PR and push to `main`, with path filters: Node checks, integration tests, ai-service checks, gitleaks + Semgrep, licence allowlist and dependency audits. Images are built on `main` and pushed to GHCR only for `v*` tags.
 
 ## How this project is developed (spec-driven, owner-gated)
 
@@ -38,6 +48,15 @@ Local tools: Mailpit UI at http://localhost:8025, API probes at http://localhost
 | 2 — Architecture & Data | Architecture, Database Schema, API Spec, OpenAPI, Decisions                   | ✅ Approved |
 | 3 — AI, Security, Infra | AI Architecture, Security & Threat Model, Infrastructure, Deployment, Testing | ✅ Approved |
 | 4 — Roadmap & Risks     | Implementation Plan, Risk Register, Architectural Gaps                        | ✅ Approved |
+
+## Phase 1 progress
+
+| Batch                         | Contents                                                                          | Status      |
+| ----------------------------- | --------------------------------------------------------------------------------- | ----------- |
+| 1A — Monorepo & packages      | pnpm + Turborepo, TypeScript, ESLint architecture rules, shared packages, hooks   | ✅ Approved |
+| 1B — Infra, API, worker       | Docker Compose services, Express kernel, outbox relay, BullMQ workers, migrations | ✅ Approved |
+| 1C — Web shell & design       | `@snapshare/ui`, all 89 inventory screens routed, en/hi, dark mode, a11y tests    | ✅ Approved |
+| 1D — AI service, CI, monitors | FastAPI skeleton with scoped vectors, Dockerfiles, GitHub Actions, Prometheus     | ✅ Approved |
 
 ## Document index
 

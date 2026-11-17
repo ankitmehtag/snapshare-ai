@@ -309,3 +309,13 @@ Fixture tests in `tooling/architecture-rules.test.ts` prove both rules.
 **Consequences.**
 - ✅ One tested implementation of the outbox and DLQ logic instead of two copies.
 - This is a small extension of the spec's §17 structure, recorded here.
+
+## ADR-025 — Public GitHub repository
+**Context.** The repo was private on GitHub's free plan. That plan meters Actions at 2,000 minutes a month and does not allow branch protection on private repos; Pro costs about ₹340 a month. The owner chose not to spend on GitHub (2026-11-17).
+
+**Decision.** Make `ankitmehtag/snapshare-ai` public. Before the switch, a full-history gitleaks scan found no secrets, and no `.env`, key or certificate files are tracked.
+
+**Consequences.**
+- ✅ Unmetered GitHub-hosted CI and free branch protection, at ₹0.
+- ⚠️ Code, docs (including pricing and roadmap) and the commit author email are visible to anyone. Secrets must never be committed: gitleaks runs in pre-commit and CI.
+- ⚠️ Forks can reuse the code. Add a licence (or an explicit "all rights reserved" notice) before launch; until then, default copyright applies.

@@ -1,12 +1,12 @@
 # SnapShare CI (Phase 1 Batch 1D, DEPLOYMENT §4).
 #
-# Cost (ADR-015): this is a private repo on the free plan (2,000 Linux minutes/month).
+# Cost (ADR-015): the repo is public (owner decision 2026-11-17), so standard GitHub-hosted
+# runners are free and unmetered. Still kept lean so runs stay fast:
 # - Path filters: each job runs only when its code changed.
-# - Few, fat jobs: every job is billed rounded UP to a whole minute.
 # - Caches: pnpm store, uv, Docker layers (GHA cache).
 # - Images are BUILT on main to prove the Dockerfiles, but PUSHED to GHCR only for a
-#   `v*` tag or a manual run with publish=true: private GHCR storage is free only up to
-#   500 MB, and every push of four images would eat into it.
+#   `v*` tag or a manual run with publish=true: only releases need an image, and GHCR
+#   packages start private (where storage beyond 500 MB is billed).
 # Actions are pinned to full commit SHAs (supply-chain safety); the tag is in the comment.
 name: CI
 
