@@ -10,3 +10,5 @@ export function recordAudit(entry: AuditEntry, session?: ClientSession): Promise
 }
 
 export const listAuditForActor = auditRepo.listForActor;
+
+export const listAuditForScope = auditRepo.listForScope;

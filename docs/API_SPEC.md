@@ -114,21 +114,27 @@ GET /studios/:studioId/events/:eventId/photos?limit=100&cursor=eyJzIjoiMjAyNi0xM
 | POST | `/admin/auth/mfa/setup` / `/verify` | TOTP | Phase 9 (Phase 2 for API) |
 
 ### 2.2 Studios, Team, Roles — Phase 2
+Every `/studios/{studioId}/…` route runs `requireAuth` → membership guard: a **non-member gets 404**, a member without `Perm` gets 403 (`meta.permission`). Implemented in Batch 2B; permissions are defined in `apps/api/src/modules/tenancy/services/system-roles.ts`.
+
 | Method | Path | Perm | Notes |
 |---|---|---|---|
-| POST | `/studios` | (any verified user) | Caller becomes owner |
-| GET | `/studios/:studioId` | member | |
-| PATCH | `/studios/:studioId` | `studio.settings` | Branding is entitlement-gated |
-| DELETE | `/studios/:studioId` | owner + re-auth | 30-day grace |
+| GET | `/studios/slug-availability?slug=` | (signed in) | ONB-02 live check; reserved words rejected |
+| POST | `/studios` | (verified email) | Caller becomes owner. 409 if the slug is taken |
+| GET | `/studios/:studioId` | `studio.view` | Includes your role and permissions; GST details only with `billing.view` |
+| PATCH | `/studios/:studioId` | `studio.settings` | GST details (`billingProfile`) also need `billing.manage`. Logo upload arrives with storage (Phase 3); branding entitlements in Phase 6 |
+| DELETE | `/studios/:studioId` | `studio.delete` + password | 202, `pending_deletion` with a 30-day grace period |
+| POST | `/studios/:studioId/cancel-deletion` | `studio.delete` | |
 | GET | `/studios/:studioId/members` | `team.view` | |
-| POST | `/studios/:studioId/invitations` | `team.manage` | Ent: `limits.seats` |
-| DELETE | `/studios/:studioId/invitations/:id` | `team.manage` | |
-| POST | `/invitations/:token/accept` | authenticated | Any invitation kind |
-| PATCH | `/studios/:studioId/members/:userId` | `team.manage` | Change role; can't demote the last owner |
-| DELETE | `/studios/:studioId/members/:userId` | `team.manage` | Revokes access immediately |
-| POST | `/studios/:studioId/transfer-ownership` | owner + re-auth | |
+| GET | `/studios/:studioId/invitations` | `team.view` | Pending only |
+| POST | `/studios/:studioId/invitations` | `team.manage` | Seats = active members + pending invitations; limit from the default plan until Phase 6 (422 `QUOTA_EXCEEDED`) |
+| DELETE | `/studios/:studioId/invitations/:invitationId` | `team.manage` | |
+| GET | `/invitations/:token` | (public, rate limited) | AUTH-06 preview: studio, role, inviter, masked email, status |
+| POST | `/invitations/:token/accept` | (signed in, same email) | 409 `email_mismatch` for another account; accepting verifies the email |
+| PATCH | `/studios/:studioId/members/:userId` | `team.manage` | No role above your own; only owners grant owner; admins can't manage owners; the last owner can't be demoted |
+| DELETE | `/studios/:studioId/members/:userId` | `team.manage` | Same rules; access ends on the member's next request |
+| POST | `/studios/:studioId/transfer-ownership` | `studio.transfer` + password | Target becomes owner, caller becomes admin |
 | GET | `/studios/:studioId/roles` | `team.view` | System roles (custom roles later) |
-| GET | `/studios/:studioId/audit-logs` | `audit.view` | Cursor paged |
+| GET | `/studios/:studioId/audit-logs` | `audit.view` | Cursor paged, newest first |
 
 ### 2.3 Events & Albums — Phase 3
 | Method | Path | Perm | Notes |

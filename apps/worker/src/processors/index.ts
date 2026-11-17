@@ -13,7 +13,13 @@ export interface ProcessorDeps {
 export type ProcessorFactory = (deps: ProcessorDeps) => JobProcessor<unknown>;
 
 const emailJob = z.object({
-  template: z.enum(['verify_email', 'account_exists', 'password_reset', 'password_changed']),
+  template: z.enum([
+    'verify_email',
+    'account_exists',
+    'password_reset',
+    'password_changed',
+    'studio_invite',
+  ]),
   to: z.email(),
   locale: z.enum(['en', 'hi']),
   data: z.record(z.string(), z.string().max(2048)),

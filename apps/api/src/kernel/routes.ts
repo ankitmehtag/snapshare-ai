@@ -13,6 +13,16 @@ export interface RouteMeta {
   /** OpenAPI-style path, e.g. /studios/{studioId}/events */
   path: string;
   scope: RouteScope;
+  /**
+   * Studio routes: the permission checked (TESTING §4 case 4), or 'member' when any
+   * member may call it. Required for scope 'studio' — the registry refuses otherwise.
+   */
+  permission?: string;
+  /**
+   * Isolation-suite hint (TESTING §4): builds a valid request body from the fixture of
+   * the studio under test, so the "own studio passes the guard" case is meaningful.
+   */
+  isolation?: { body?: (fx: Record<string, string>) => object };
 }
 
 export interface RouteDefinition<
@@ -49,7 +59,18 @@ export class RouteRegistry {
     def: RouteDefinition<P, Q, B>,
   ): void {
     const expressPath = def.path.replace(/\{([^}]+)\}/g, ':$1');
-    const meta: RouteMeta = { method: def.method, path: def.path, scope: def.scope };
+    if (def.scope === 'studio' && !def.permission) {
+      throw new Error(
+        `Studio route ${def.method.toUpperCase()} ${def.path} must declare a permission`,
+      );
+    }
+    const meta: RouteMeta = {
+      method: def.method,
+      path: def.path,
+      scope: def.scope,
+      ...(def.permission ? { permission: def.permission } : {}),
+      ...(def.isolation ? { isolation: def.isolation } : {}),
+    };
 
     const handler = async (req: Request, res: Response, next: NextFunction) => {
       try {
@@ -92,6 +113,7 @@ export class RouteRegistry {
       summary: def.summary,
       tags: def.tags ?? [],
       'x-scope': def.scope,
+      ...(def.permission ? { 'x-permission': def.permission } : {}),
       request,
       responses,
     } as RouteConfig;

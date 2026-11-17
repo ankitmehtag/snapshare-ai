@@ -7,6 +7,7 @@ const TEMPLATES: EmailTemplate[] = [
   'account_exists',
   'password_reset',
   'password_changed',
+  'studio_invite',
 ];
 
 describe('email templates', () => {
@@ -22,10 +23,13 @@ describe('email templates', () => {
           url: 'https://app.snapshare.in/verify?token=abc',
           loginUrl: 'https://app.snapshare.in/login',
           resetUrl: 'https://app.snapshare.in/forgot',
+          inviterName: 'Rohan',
+          studioName: 'Lens Story',
+          roleName: 'Editor',
         },
       });
       expect(email.subject.length).toBeGreaterThan(5);
-      expect(email.text).toContain('Asha');
+      expect(email.text).toMatch(template === 'studio_invite' ? /Rohan/ : /Asha/);
       expect(`${email.text}${email.html}`).not.toMatch(/\{\w+\}/);
       expect(email.html).toContain(`lang="${locale}"`);
     },
@@ -56,4 +60,19 @@ describe('email templates', () => {
     expect(email.html).not.toContain('javascript:');
     expect(email.text).not.toContain('javascript:');
   });
+});
+
+it('keeps header injection out of subjects', () => {
+  const email = renderEmail({
+    template: 'studio_invite',
+    locale: 'en',
+    to: 'a@example.com',
+    data: {
+      inviterName: 'Evil\r\nBcc: x@y.z',
+      studioName: 'S',
+      roleName: 'Viewer',
+      url: 'https://a.b/c',
+    },
+  });
+  expect(email.subject).not.toMatch(/[\r\n]/);
 });

@@ -150,8 +150,11 @@ Indexes: `{tenantId:1, key:1}` unique
 
 | Permission group | owner | admin | editor | uploader | viewer |
 |---|---|---|---|---|---|
+| studio.view | ✅ | ✅ | ✅ | ✅ | ✅ |
 | studio.settings / branding | ✅ | ✅ | — | — | — |
+| studio.delete / studio.transfer | ✅ | — | — | — | — |
 | billing.* | ✅ | view | — | — | — |
+| team.view | ✅ | ✅ | ✅ | ✅ | ✅ |
 | team.manage | ✅ | ✅ (not owners) | — | — | — |
 | event.create/update/delete | ✅ | ✅ | ✅ (no delete) | — | — |
 | photo.upload | ✅ | ✅ | ✅ | ✅ | — |

@@ -68,6 +68,25 @@ const COPY: Record<EmailTemplate, Record<'en' | 'hi', Copy>> = {
         'यह लिंक 1 घंटे में समाप्त हो जाएगा और एक ही बार काम करेगा। अगर आपने यह अनुरोध नहीं किया है, तो इसे अनदेखा करें; आपका पासवर्ड नहीं बदलेगा।',
     },
   },
+  studio_invite: {
+    en: {
+      subject: '{inviterName} invited you to {studioName} on SnapShare',
+      body: ['Hi,', '{inviterName} invited you to join {studioName} on SnapShare as {roleName}.'],
+      action: ['Accept invitation', 'url'],
+      footer:
+        'This invitation expires in 7 days. Sign in or create an account with this email address to accept it.',
+    },
+    hi: {
+      subject: '{inviterName} ने आपको SnapShare पर {studioName} में आमंत्रित किया है',
+      body: [
+        'नमस्ते,',
+        '{inviterName} ने आपको SnapShare पर {studioName} में {roleName} के रूप में जुड़ने के लिए आमंत्रित किया है।',
+      ],
+      action: ['आमंत्रण स्वीकार करें', 'url'],
+      footer:
+        'यह आमंत्रण 7 दिनों में समाप्त हो जाएगा। स्वीकार करने के लिए इसी ईमेल पते से साइन इन करें या खाता बनाएं।',
+    },
+  },
   password_changed: {
     en: {
       subject: 'Your SnapShare password was changed',
@@ -134,5 +153,5 @@ export function renderEmail(job: EmailJob): RenderedEmail {
     `<p style="margin:24px 0 0;font-size:13px;color:#666">${escapeHtml(copy.footer)}</p>` +
     `</div></body></html>`;
 
-  return { subject: copy.subject, text, html };
+  return { subject: fill(copy.subject, job.data, (v) => v.replace(/[\r\n]/g, ' ')), text, html };
 }

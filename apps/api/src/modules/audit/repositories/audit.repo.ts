@@ -40,7 +40,19 @@ export const auditRepo = {
     );
   },
 
-  /** Read access for tests and (Phase 2B) the studio activity screen. */
+  /** Studio activity (ST-41): newest first, keyset-paged on (at, _id). */
+  async listForScope(scopeId: string, after: { at: Date; id: string } | undefined, limit: number) {
+    const filter: Record<string, unknown> = { 'scope.id': new Types.ObjectId(scopeId) };
+    if (after) {
+      filter.$or = [
+        { at: { $lt: after.at } },
+        { at: after.at, _id: { $lt: new Types.ObjectId(after.id) } },
+      ];
+    }
+    return AuditLogModel.find(filter).sort({ at: -1, _id: -1 }).limit(limit).lean();
+  },
+
+  /** Read access for tests and support tooling. */
   async listForActor(userId: string, limit = 50) {
     return AuditLogModel.find({ 'actor.userId': new Types.ObjectId(userId) })
       .sort({ at: -1 })

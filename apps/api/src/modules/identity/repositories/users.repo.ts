@@ -12,6 +12,10 @@ export const usersRepo = {
     return UserModel.findById(id).lean<UserDoc>();
   },
 
+  findByIds(ids: Types.ObjectId[]): Promise<UserDoc[]> {
+    return UserModel.find({ _id: { $in: ids } }).lean<UserDoc[]>();
+  },
+
   findByEmail(email: string): Promise<UserDoc | null> {
     return UserModel.findOne({ email }).lean<UserDoc>();
   },

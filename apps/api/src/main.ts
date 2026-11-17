@@ -3,6 +3,7 @@ import { EnvValidationError } from '@snapshare/config';
 import { connectMongo, createLogger, createRedis } from '@snapshare/server-kit';
 import { createApp } from './app.js';
 import { loadApiEnv } from './env.js';
+import { createTenancyModule } from './modules/tenancy/index.js';
 import {
   createIdentityModule,
   hibpChecker,
@@ -34,6 +35,15 @@ async function main() {
   if (!env.AUTH_JWT_PRIVATE_KEY) {
     logger.warn('AUTH_JWT_PRIVATE_KEY not set: using an ephemeral signing key (dev only)');
   }
+  const tenancy = createTenancyModule({
+    redis,
+    logger,
+    appUrl: env.APP_URL,
+    cursorSecret: env.CURSOR_SECRET,
+    ipHashSecret: env.IP_HASH_SECRET,
+  });
+  await tenancy.ensureSystemRoles();
+
   const identity = await createIdentityModule({
     redis,
     logger,
@@ -46,6 +56,7 @@ async function main() {
       domain: env.COOKIE_DOMAIN,
     },
     ipHashSecret: env.IP_HASH_SECRET,
+    workspacesFor: tenancy.workspacesFor,
   });
 
   const { app } = createApp({
@@ -53,7 +64,7 @@ async function main() {
     logger,
     redis,
     metrics,
-    modules: [identity.mount],
+    modules: [identity.mount, tenancy.mount(identity.requireAuth)],
     readinessChecks: {
       mongo: async () => {
         await mongoose.connection.db!.admin().ping();

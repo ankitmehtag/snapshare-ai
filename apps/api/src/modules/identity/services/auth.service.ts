@@ -1,6 +1,6 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { writeOutbox, type Logger } from '@snapshare/server-kit';
-import type { EmailJob, EmailTemplate, Me, SessionInfo } from '@snapshare/types';
+import type { EmailJob, EmailTemplate, Me, SessionInfo, Workspace } from '@snapshare/types';
 import type { ClientSession, Types } from 'mongoose';
 import { AppError } from '../../../kernel/errors.js';
 import { inTransaction } from '../../../kernel/transaction.js';
@@ -44,6 +44,7 @@ export interface AuthServiceDeps {
   breach: BreachChecker;
   appUrl: string;
   logger: Logger;
+  workspacesFor?: (userId: string) => Promise<Workspace[]>;
 }
 
 const sha256 = (v: string) => createHash('sha256').update(v).digest('hex');
@@ -401,7 +402,8 @@ export class AuthService {
   // --- profile & sessions ----------------------------------------------------------
 
   async me(userId: string): Promise<Me> {
-    return toMe(await this.requireUser(userId));
+    const user = await this.requireUser(userId);
+    return toMe(user, (await this.deps.workspacesFor?.(userId)) ?? []);
   }
 
   async updateMe(
@@ -415,7 +417,7 @@ export class AuthService {
     const clean = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined));
     const user = await usersRepo.updateProfile(userId, clean);
     if (!user) throw new AppError(401, 'UNAUTHENTICATED', 'Please sign in');
-    return toMe(user);
+    return toMe(user, (await this.deps.workspacesFor?.(userId)) ?? []);
   }
 
   async listSessions(userId: string, currentSessionId: string): Promise<SessionInfo[]> {
@@ -531,7 +533,7 @@ export class AuthService {
   }
 }
 
-function toMe(user: UserDoc): Me {
+function toMe(user: UserDoc, workspaces: Workspace[]): Me {
   return {
     id: String(user._id),
     email: user.email,
@@ -540,7 +542,6 @@ function toMe(user: UserDoc): Me {
     locale: user.locale,
     timezone: user.timezone,
     platformRole: user.platformRole,
-    // Studio memberships arrive with Batch 2B; until then there are none to list.
-    workspaces: [],
+    workspaces,
   };
 }

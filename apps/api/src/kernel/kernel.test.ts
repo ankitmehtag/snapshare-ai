@@ -28,6 +28,7 @@ describe('RouteRegistry', () => {
       method: 'post',
       path: '/items/{itemId}',
       scope: 'studio',
+      permission: 'event.update',
       summary: 'test',
       request: {
         params: z.object({ itemId: z.string().regex(/^[a-f0-9]{24}$/) }),
@@ -62,7 +63,9 @@ describe('RouteRegistry', () => {
   });
 
   it('records scope metadata and OpenAPI paths', () => {
-    expect(registry.routes).toEqual([{ method: 'post', path: '/items/{itemId}', scope: 'studio' }]);
+    expect(registry.routes).toEqual([
+      { method: 'post', path: '/items/{itemId}', scope: 'studio', permission: 'event.update' },
+    ]);
     expect(registry.openapi.definitions).toHaveLength(1);
   });
 

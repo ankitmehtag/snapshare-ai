@@ -22,6 +22,8 @@ export interface AuthContext {
   sessionId: string;
   platformRole: PlatformRole;
   scope: Scope | null;
+  /** Role key in `scope` (studio routes only), e.g. 'owner'. Checks use permissions. */
+  role?: string;
   permissions: readonly string[];
 }
 
@@ -106,7 +108,7 @@ export interface SessionInfo {
 
 /** Transactional email templates rendered by the notify worker. */
 export type EmailTemplate =
-  'verify_email' | 'account_exists' | 'password_reset' | 'password_changed';
+  'verify_email' | 'account_exists' | 'password_reset' | 'password_changed' | 'studio_invite';
 
 /**
  * Payload of a `notify.email` job (written to the outbox by the API). `data` holds
