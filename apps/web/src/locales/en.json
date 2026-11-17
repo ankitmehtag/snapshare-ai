@@ -1,0 +1,39 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "events": "Events",
+    "clients": "Clients",
+    "portfolio": "Portfolio",
+    "team": "Team",
+    "analytics": "Analytics",
+    "billing": "Billing",
+    "settings": "Settings",
+    "home": "Home",
+    "albums": "Albums",
+    "groups": "Groups",
+    "photosOfMe": "Photos of me",
+    "eventPhotos": "Event photos",
+    "favorites": "Favorites",
+    "storage": "Storage",
+    "privacy": "Privacy",
+    "overview": "Overview",
+    "users": "Users",
+    "studios": "Studios",
+    "queues": "Queues",
+    "ai": "AI & GPU",
+    "audit": "Audit logs",
+    "flags": "Feature flags",
+    "health": "System health"
+  },
+  "areas": { "studio": "Studio", "personal": "Personal", "admin": "Platform admin" },
+  "comingSoon": {
+    "title": "{{title}} is coming in Phase {{phase}}",
+    "body": "This screen is planned and specified. It will be built in Phase {{phase}} of the roadmap — nothing here is live yet."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "The page you’re looking for doesn’t exist or has moved."
+  },
+  "theme": { "toggle": "Switch to {{mode}} mode", "light": "light", "dark": "dark" },
+  "language": { "label": "Language" }
+}

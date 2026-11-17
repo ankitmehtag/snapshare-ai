@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /$
+Allow: /pricing
+Disallow: /g/
+Disallow: /p/
+Disallow: /me
+Disallow: /studio/
+Disallow: /admin

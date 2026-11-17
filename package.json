@@ -19,13 +19,15 @@
     "infra:up": "docker compose -f infrastructure/docker/compose.yml up -d --wait",
     "infra:down": "docker compose -f infrastructure/docker/compose.yml down",
     "infra:reset": "docker compose -f infrastructure/docker/compose.yml down -v",
-    "migrate": "pnpm --filter @snapshare/api migrate"
+    "migrate": "pnpm --filter @snapshare/api migrate",
+    "test:e2e": "pnpm --filter @snapshare/web build && pnpm --filter @snapshare/web test:e2e"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@types/node": "24.19.2",
     "eslint": "10.15.0",
     "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-react-hooks": "7.1.1",
     "globals": "17.14.0",
     "lefthook": "2.2.2",
     "prettier": "3.10.1",

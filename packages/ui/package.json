@@ -3,19 +3,41 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Shared React component library (Tailwind + shadcn/ui). Components are added in Phase 1 Batch 1C.",
+  "description": "Shared React component library: design tokens (Tailwind v4), primitives and state components.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./styles.css": "./src/styles.css"
   },
   "files": [
-    "dist"
+    "dist",
+    "src/styles.css"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "dependencies": {
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "lucide-react": "1.73.0",
+    "tailwind-merge": "3.7.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.12",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "jsdom": "31.0.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   }
 }
